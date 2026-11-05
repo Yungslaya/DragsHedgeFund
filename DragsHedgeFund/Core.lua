@@ -60,7 +60,13 @@ function GG.InitDB()
     end
     -- old builds kept pace data here; not used any more
     db.auto, db.days, db.trackStart, db.xpLvl, db.xpCur, db.xpMax = nil, nil, nil, nil, nil, nil
-    if db.goal then db.goal.level, db.goal.deadline, db.goal.startSaved = nil, nil, nil end
+    if db.goal then
+        db.goal.level, db.goal.deadline, db.goal.startSaved = nil, nil, nil
+        -- old custom goal names had "by level 40" / "in 7 days" in them
+        if type(db.goal.name) == "string" then
+            db.goal.name = db.goal.name:gsub(" by level %d+", ""):gsub(" in %d+ days?", "")
+        end
+    end
     if not isNum(db.owed) then db.owed = 0 end
     if not isNum(db.saved) then db.saved = 0 end
     db.log = db.log or {}
@@ -99,21 +105,43 @@ function GG.OnMoney(silent)
 end
 
 -- You moved the gold somewhere safe (bank alt, mail...). Count it as saved.
-function GG.ConfirmSaved()
+-- amt: how much (default all of it). to: who it was mailed to, if mailed.
+function GG.ConfirmSaved(amt, to)
     local db = GG.db
     if db.owed <= 0 then return end
-    local amt = db.owed
-    for _, e in ipairs(db.log) do if e.cut and not e.done then e.done = true end end
-    db.log[#db.log + 1] = { t = time(), saved = amt }
+    amt = min(amt or db.owed, db.owed)
+    if amt <= 0 then return end
+    if amt >= db.owed then
+        for _, e in ipairs(db.log) do if e.cut and not e.done then e.done = true end end
+    else
+        -- only part of it: mark the oldest gains first
+        local left = amt
+        for _, e in ipairs(db.log) do
+            if e.cut and not e.done and e.cut <= left then e.done = true; left = left - e.cut end
+        end
+    end
+    db.log[#db.log + 1] = { t = time(), saved = amt, to = to }
     while #db.log > 300 do table.remove(db.log, 1) end
     db.saved = db.saved + amt
-    db.owed = 0
+    db.owed = max(db.owed - amt, 0)
     local g = db.goal
     if g and db.saved >= g.amount and not g.metSound then
         g.metSound = true
         if PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.LEVEL_UP or 888) end
     end
-    print("|cffffd700Hedge Fund:|r saved " .. GG.Money(amt) .. ". Total saved: " .. GG.Money(db.saved))
+    print("|cffffd700Hedge Fund:|r saved " .. GG.Money(amt) .. (to and (" (mailed to " .. to .. ")") or "") ..
+        ". Total saved: " .. GG.Money(db.saved))
+end
+
+-- "5g 37s 2c" with no colors or icons (for mail text)
+function GG.MoneyPlain(c)
+    c = floor((c or 0) + 0.5)
+    local g, s, cp = floor(c / 10000), floor(c / 100) % 100, c % 100
+    local out = {}
+    if g > 0 then out[#out + 1] = GG.Commas(g) .. "g" end
+    if s > 0 then out[#out + 1] = s .. "s" end
+    if cp > 0 or c == 0 then out[#out + 1] = cp .. "c" end
+    return table.concat(out, " ")
 end
 
 -- How many gains are waiting to be put away.

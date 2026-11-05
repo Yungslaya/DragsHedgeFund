@@ -124,7 +124,7 @@ local function BuildMain(m)
 end
 
 ------------------------------------------------------------ list view (every gain and every save)
-local ROWS = 14
+local ROWS = 12
 local function BuildList(l)
     l.head = text(l, 19, 1, 0.82, 0)
     l.head:SetPoint("TOP", 0, -36)
@@ -383,7 +383,7 @@ local function RefreshList(l)
         if e then
             r.a:SetText(date("%b %d  %I:%M %p", e.t))
             if e.saved then
-                r.b:SetText("|cff20ff20SAVED|r")
+                r.b:SetText(e.to and "|cff20ff20MAILED|r" or "|cff20ff20SAVED|r")
                 r.c:SetText(GG.Money(e.saved))
             else
                 r.b:SetText(GG.Money(e.gain))

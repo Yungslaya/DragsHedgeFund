@@ -183,7 +183,10 @@ function GG.RefreshMini()
 
     local tip = (db.miniTips ~= false) and GG.Tips()[1] or nil
     M.tip:SetText(tip or "")
-    M:SetHeight(tip and 164 or 146)
+    -- grow to fit the tip (it can wrap to 2 lines)
+    local th = tip and M.tip.GetStringHeight and M.tip:GetStringHeight()
+    if type(th) ~= "number" or th <= 0 then th = 16 end
+    M:SetHeight(tip and (148 + th + 6) or 146)
 end
 
 -- hook into the rest of the addon
