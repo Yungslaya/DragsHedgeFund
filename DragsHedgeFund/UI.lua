@@ -74,19 +74,21 @@ local function BuildMain(m)
     m.owed:SetPoint("TOP", 0, -52)
     m.saveBtn = button(m, "I saved it", 140, 28, 15, function() GG.ConfirmSaved(); GG.Refresh() end)
     m.saveBtn:SetPoint("TOP", 0, -82)
+    m.spend = text(m, 20)
+    m.spend:SetPoint("TOP", 0, -116)
     m.gain = text(m, 15)
-    m.gain:SetPoint("TOP", 0, -116)
+    m.gain:SetPoint("TOP", 0, -142)
     m.gain:SetWidth(W - 40)
 
     m.none = text(m, 16, 0.8, 0.8, 0.8)
-    m.none:SetPoint("TOP", 0, -160)
+    m.none:SetPoint("TOP", 0, -186)
     m.none:SetText("No goals yet. Click Goals to add one.")
 
     m.cards = {}
     for i = 1, GG.MAX_GOALS do
         local c = CreateFrame("Frame", nil, m)
         c:SetSize(W - 40, CARD - 6)
-        c:SetPoint("TOP", 0, -142 - (i - 1) * CARD)
+        c:SetPoint("TOP", 0, -168 - (i - 1) * CARD)
         c.name = text(c, 16, 1, 0.82, 0, "LEFT")
         c.name:SetPoint("TOPLEFT", 4, 0)
         c.name:SetPoint("RIGHT", c, "RIGHT", -60, 0)
@@ -388,6 +390,8 @@ local function RefreshMain(m)
         m.saveBtn:Hide()
     end
 
+    m.spend:SetText(GG.SpendText())
+
     local now = GetTime()
     if GG.lastAt and now - GG.lastAt < 20 and (GG.lastPut or 0) > 0 then
         m.gain:SetText("|cff20ff20+|r" .. GG.Money(GG.lastGain) .. "  |cffffd100put away|r " .. GG.Money(GG.lastPut))
@@ -418,7 +422,7 @@ local function RefreshMain(m)
     end
 
     -- tips go under the last card
-    local y = -142 - max(#goals, 1) * CARD - 4
+    local y = -168 - max(#goals, 1) * CARD - 4
     m.tipHead:ClearAllPoints(); m.tipHead:SetPoint("TOPLEFT", 24, y)
     local tips = GG.Tips()
     for i = 1, 2 do

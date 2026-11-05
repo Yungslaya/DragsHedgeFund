@@ -73,15 +73,17 @@ function GG.BuildMini()
     end)
     M.saveBtn:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 
+    M.spend = text(M, 16)
+    M.spend:SetPoint("TOPLEFT", L, -34)
     M.line = text(M, 14)
-    M.line:SetPoint("TOPLEFT", L, -34)
+    M.line:SetPoint("TOPLEFT", L, -56)
     M.line:SetPoint("RIGHT", M, "RIGHT", R, 0)
     M.line:SetWordWrap(false)
 
     -- one row per goal: name + saved/goal, then a bar
     M.rows = {}
     for i = 1, GG.MAX_GOALS do
-        local y = -56 - (i - 1) * ROW
+        local y = -78 - (i - 1) * ROW
         local r = {}
         r.name = text(M, 13, 1, 0.82, 0)
         r.name:SetPoint("TOPLEFT", L, y)
@@ -94,7 +96,7 @@ function GG.BuildMini()
         M.rows[i] = r
     end
     M.none = text(M, 14, 0.8, 0.8, 0.8)
-    M.none:SetPoint("TOPLEFT", L, -58)
+    M.none:SetPoint("TOPLEFT", L, -80)
     M.none:SetText("No goals. Right-click to add one.")
 
     M.tip = text(M, 13, 0.85, 0.85, 0.85)
@@ -133,6 +135,8 @@ function GG.RefreshMini()
         M.saveBtn:Hide()
     end
 
+    M.spend:SetText(GG.SpendText(true))
+
     local now = GetTime()
     if GG.lastAt and now - GG.lastAt < 20 and (GG.lastPut or 0) > 0 then
         M.line:SetText("|cff20ff20+|r" .. GG.Money(GG.lastGain) .. "  |cffffd100put away|r " .. GG.Money(GG.lastPut))
@@ -159,7 +163,7 @@ function GG.RefreshMini()
         end
     end
 
-    local y = -56 - math.max(#goals, 1) * ROW
+    local y = -78 - math.max(#goals, 1) * ROW
     local tip = (db.miniTips ~= false) and GG.Tips()[1] or nil
     M.tip:ClearAllPoints()
     M.tip:SetPoint("TOPLEFT", 12, y - 2)

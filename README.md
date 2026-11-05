@@ -2,7 +2,7 @@
 
 Gold savings helper for **WoW: Forever** (Interface 16001).
 
-**What's new (1.1.0):** up to 5 goals at once, each with its own %. Mail your savings to your alt from the mailbox.
+**What's new (1.2.0):** **Can spend** shows how much of your bag gold is yours to spend, so you don't spend what you still have to put away.
 
 ## How it works
 
@@ -11,6 +11,8 @@ Gold savings helper for **WoW: Forever** (Interface 16001).
 3. The cuts add up in **To put away**.
 4. Put that gold somewhere safe (a bank alt, for example), then click **I saved it**.
 5. Only gold you confirm counts as saved. Gold you had before is yours and is never counted.
+
+**Can spend** = your bag gold minus To put away. It turns red if you spend into your savings.
 
 Each goal shows **saved of goal**, a bar, and **Still need**. A full goal stops taking cuts and says **GOAL MET!**
 The **List** shows every gain, its cut, and every time you saved.

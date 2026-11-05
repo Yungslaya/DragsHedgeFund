@@ -171,7 +171,30 @@ function GG.OnMoney(silent)
         end
         GG.lastGain, GG.lastPut, GG.lastAt = gain, total, GetTime()
     end
+    -- spent into the gold you still have to put away? warn once
+    local owed = GG.TotalOwed()
+    if isNum(db.lastMoney) and m < db.lastMoney and owed > 0 and m < owed and db.lastMoney >= owed then
+        print("|cffffd700Hedge Fund:|r |cffff3030You spent into your savings! You are short " ..
+            GG.Money(owed - m) .. ".|r")
+        if PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.RAID_WARNING or 8959) end
+    end
     db.lastMoney = m
+end
+
+-- What you can spend: bag gold minus the gold you still have to put away.
+-- Returns spend (can be below 0), bag gold.
+function GG.CanSpend()
+    local m = safe(GetMoney)
+    if not isNum(m) then m = GG.db.lastMoney or 0 end
+    return m - GG.TotalOwed(), m
+end
+
+-- "Can spend: 12g" in green, or "Spent into savings: 1g" in red
+function GG.SpendText(short)
+    local spend = GG.CanSpend()
+    local money = short and GG.MoneyShort or GG.Money
+    if spend >= 0 then return "|cff20ff20Can spend:|r " .. money(spend) end
+    return "|cffff3030Spent into savings:|r " .. money(-spend)
 end
 
 -- You moved the gold somewhere safe (bank alt, mail...). Count it as saved.
