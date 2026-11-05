@@ -2,8 +2,8 @@ local _, GG = ...
 
 -- Small overlay that can stay on screen. Drag to move, right-click opens the big window.
 local FONT = "Fonts\\FRIZQT__.TTF"
-local W = 260
-local floor = math.floor
+local W = 270
+local ROW = 36       -- one goal row
 local M
 
 local function text(parent, size, r, g, b, justify)
@@ -55,40 +55,12 @@ function GG.BuildMini()
     M:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 
     local L, R = 12, -12
-    M.goal = text(M, 14, 1, 0.82, 0)
-    M.goal:SetPoint("TOPLEFT", L, -10)
-    M.goal:SetPoint("RIGHT", M, "RIGHT", -50, 0)
-    M.goal:SetWordWrap(false)
-    M.pct = text(M, 14, 1, 1, 1, "RIGHT")
-    M.pct:SetPoint("TOPRIGHT", R, -10)
-
-    M.saved = text(M, 22)
-    M.saved:SetPoint("TOPLEFT", L, -30)
-    M.of = text(M, 14, 0.8, 0.8, 0.8, "RIGHT")
-    M.of:SetPoint("TOPRIGHT", R, -36)
-
-    local bar = CreateFrame("StatusBar", nil, M)
-    bar:SetPoint("TOPLEFT", L, -58)
-    bar:SetPoint("TOPRIGHT", R, -58)
-    bar:SetHeight(14)
-    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-    bar:SetStatusBarColor(1, 0.75, 0)
-    bar:SetMinMaxValues(0, 1)
-    local bg = bar:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(0.15, 0.15, 0.15, 1)
-    M.bar = bar
-
-    M.needL = text(M, 14, 1, 0.82, 0)
-    M.needL:SetPoint("TOPLEFT", L, -80)
-    M.need = text(M, 14, 1, 1, 1, "RIGHT")
-    M.need:SetPoint("TOPRIGHT", R, -80)
-
-    M.owedL = text(M, 14)
-    M.owedL:SetPoint("TOPLEFT", L, -102)
+    -- top: what to put away + Saved button
+    M.owedL = text(M, 15)
+    M.owedL:SetPoint("TOPLEFT", L, -12)
     M.saveBtn = CreateFrame("Button", nil, M, "UIPanelButtonTemplate")
     M.saveBtn:SetSize(64, 22)
-    M.saveBtn:SetPoint("TOPRIGHT", R + 2, -98)
+    M.saveBtn:SetPoint("TOPRIGHT", R + 2, -8)
     M.saveBtn:SetText("Saved")
     local bfs = M.saveBtn:GetFontString()
     if bfs then bfs:SetFont(FONT, 13, "") end
@@ -102,12 +74,30 @@ function GG.BuildMini()
     M.saveBtn:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 
     M.line = text(M, 14)
-    M.line:SetPoint("TOPLEFT", L, -124)
+    M.line:SetPoint("TOPLEFT", L, -34)
     M.line:SetPoint("RIGHT", M, "RIGHT", R, 0)
     M.line:SetWordWrap(false)
 
+    -- one row per goal: name + saved/goal, then a bar
+    M.rows = {}
+    for i = 1, GG.MAX_GOALS do
+        local y = -56 - (i - 1) * ROW
+        local r = {}
+        r.name = text(M, 13, 1, 0.82, 0)
+        r.name:SetPoint("TOPLEFT", L, y)
+        r.name:SetWidth(120)
+        r.name:SetWordWrap(false)
+        r.val = text(M, 13, 1, 1, 1, "RIGHT")
+        r.val:SetPoint("TOPRIGHT", R, y)
+        r.bar = GG.GoalBar(M, W - 2 * L, 14, 11)
+        r.bar:SetPoint("TOPLEFT", L, y - 16)
+        M.rows[i] = r
+    end
+    M.none = text(M, 14, 0.8, 0.8, 0.8)
+    M.none:SetPoint("TOPLEFT", L, -58)
+    M.none:SetText("No goals. Right-click to add one.")
+
     M.tip = text(M, 13, 0.85, 0.85, 0.85)
-    M.tip:SetPoint("TOPLEFT", L, -144)
     M.tip:SetPoint("RIGHT", M, "RIGHT", R, 0)
 
     -- its own 1-second clock, so it updates while the big window is closed
@@ -132,40 +122,11 @@ end
 function GG.RefreshMini()
     if not M or not M:IsShown() then return end
     local db = GG.db
-    local st = GG.Status()
-    local g = st.goal
-    if not g then
-        M.goal:SetText("Drags Hedge Fund")
-        M.pct:SetText("")
-        M.saved:SetText("No goal yet")
-        M.of:SetText("")
-        M.bar:SetValue(0)
-        M.needL:SetText("Right-click to pick one"); M.need:SetText("")
-        M.line:SetText(""); M.tip:SetText("")
-        M.owedL:SetText(""); M.saveBtn:Hide()
-        M:SetHeight(102)
-        return
-    end
+    local goals = db.goals
 
-    M.goal:SetText(g.name)
-    M.pct:SetText(GG.PctText(st.frac))
-    M.saved:SetText(GG.Money(st.saved))
-    M.of:SetText("of " .. GG.Money(st.amount))
-    M.bar:SetValue(st.frac)
-
-    if st.done then
-        M.needL:SetText("|cff20ff20GOAL MET!|r")
-        M.need:SetText("Go buy it")
-    elseif st.allIn then
-        M.needL:SetText("Put away the rest!")
-        M.need:SetText("")
-    else
-        M.needL:SetText("Still need")
-        M.need:SetText(GG.Money(st.need))
-    end
-
-    if st.owed > 0 then
-        M.owedL:SetText("|cffffd100To put away|r " .. GG.MoneyShort(st.owed))
+    local owed = GG.TotalOwed()
+    if owed > 0 then
+        M.owedL:SetText("|cffffd100To put away|r " .. GG.MoneyShort(owed))
         M.saveBtn:Show()
     else
         M.owedL:SetText("|cffaaaaaaNothing to put away|r")
@@ -175,18 +136,39 @@ function GG.RefreshMini()
     local now = GetTime()
     if GG.lastAt and now - GG.lastAt < 20 and (GG.lastPut or 0) > 0 then
         M.line:SetText("|cff20ff20+|r" .. GG.Money(GG.lastGain) .. "  |cffffd100put away|r " .. GG.Money(GG.lastPut))
-    elseif not st.done then
-        M.line:SetText("Saving " .. db.pct .. "% of each gain")
     else
-        M.line:SetText("")
+        M.line:SetText("|cffffd100Total saved|r " .. GG.MoneyShort(GG.TotalSaved()))
     end
 
+    M.none:SetShown(#goals == 0)
+    for i, r in ipairs(M.rows) do
+        local g = goals[i]
+        local show = g ~= nil
+        r.name:SetShown(show); r.val:SetShown(show); r.bar:SetShown(show)
+        if g then
+            local st = GG.GoalStatus(g)
+            r.name:SetText(g.name)
+            if st.done then
+                r.val:SetText("|cff20ff20GOAL MET!|r")
+            else
+                r.val:SetText(GG.MoneyShort(g.saved) .. " |cffaaaaaa/|r " .. GG.MoneyShort(g.amount))
+            end
+            r.bar.top:SetValue(st.frac)
+            r.bar:SetValue(st.frac2)
+            r.bar.label:SetText(GG.PctText(st.frac))
+        end
+    end
+
+    local y = -56 - math.max(#goals, 1) * ROW
     local tip = (db.miniTips ~= false) and GG.Tips()[1] or nil
+    M.tip:ClearAllPoints()
+    M.tip:SetPoint("TOPLEFT", 12, y - 2)
+    M.tip:SetPoint("RIGHT", M, "RIGHT", -12, 0)
     M.tip:SetText(tip or "")
     -- grow to fit the tip (it can wrap to 2 lines)
     local th = tip and M.tip.GetStringHeight and M.tip:GetStringHeight()
     if type(th) ~= "number" or th <= 0 then th = 16 end
-    M:SetHeight(tip and (148 + th + 6) or 146)
+    M:SetHeight(-y + (tip and (th + 10) or 6))
 end
 
 -- hook into the rest of the addon

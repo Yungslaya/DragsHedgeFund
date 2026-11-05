@@ -38,7 +38,7 @@ function GG.FillMail()
     if type(me) == "string" and to:lower() == me:lower() then
         P.msg:SetText("|cffff3030You can't mail yourself.|r") return
     end
-    local amt = db.owed or 0
+    local amt = GG.TotalOwed()
     if amt <= 0 then P.msg:SetText("Nothing to put away.") return end
     local money = GG.safe(GetMoney) or 0
     if GG.isNum(money) and amt + 30 > money then   -- 30c postage
@@ -53,16 +53,23 @@ function GG.FillMail()
         pcall(MailFrameTab2.Click, MailFrameTab2)
     end
 
-    local g = db.goal
-    local goalName = g and g.name or "my goal"
-    local after = db.saved + amt
-    local body = "Savings for: " .. goalName ..
-        "\nSent: " .. date("%b %d, %Y") ..
+    -- one line per goal that has gold waiting
+    local lines, names = {}, {}
+    for _, g in ipairs(db.goals) do
+        if g.owed > 0 then
+            names[#names + 1] = g.name
+            lines[#lines + 1] = "- " .. g.name .. ": " .. GG.MoneyPlain(g.owed) ..
+                " (saved " .. GG.MoneyPlain(g.saved + g.owed) .. " of " .. GG.MoneyPlain(g.amount) .. ")"
+        end
+    end
+    local subject = #names == 1 and ("Savings: " .. names[1]) or ("Savings: " .. #names .. " goals")
+    local body = "Savings sent: " .. date("%b %d, %Y") ..
         "\nAmount: " .. GG.MoneyPlain(amt) ..
-        "\nSaved so far: " .. GG.MoneyPlain(after) .. (g and (" of " .. GG.MoneyPlain(g.amount)) or "")
+        "\n" .. table.concat(lines, "\n")
+    if #body > 480 then body = body:sub(1, 480) end
 
     if SendMailNameEditBox then SendMailNameEditBox:SetText(to) end
-    if SendMailSubjectEditBox then SendMailSubjectEditBox:SetText("Savings: " .. goalName) end
+    if SendMailSubjectEditBox then SendMailSubjectEditBox:SetText(subject) end
     if SendMailBodyEditBox then SendMailBodyEditBox:SetText(body) end
     -- "Send Money", not C.O.D.
     if SendMailSendMoneyButton and SendMailSendMoneyButton.SetChecked then SendMailSendMoneyButton:SetChecked(true) end
@@ -76,7 +83,7 @@ end
 
 local function Refresh()
     if not P or not P:IsShown() then return end
-    local owed = GG.db.owed or 0
+    local owed = GG.TotalOwed()
     if owed > 0 then
         P.owed:SetText(GG.Money(owed))
         P.fill:Show()
