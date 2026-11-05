@@ -133,6 +133,12 @@ function GG.ConfirmSaved(amt, to)
         ". Total saved: " .. GG.Money(db.saved))
 end
 
+-- 0.0005 -> "under 1%" (plain floor would show 0% and look broken)
+function GG.PctText(frac)
+    if frac > 0 and frac < 0.01 then return "under 1%" end
+    return floor(frac * 100) .. "%"
+end
+
 -- "5g 37s 2c" with no colors or icons (for mail text)
 function GG.MoneyPlain(c)
     c = floor((c or 0) + 0.5)

@@ -148,7 +148,7 @@ function GG.RefreshMini()
     end
 
     M.goal:SetText(g.name)
-    M.pct:SetText(floor(st.frac * 100) .. "%")
+    M.pct:SetText(GG.PctText(st.frac))
     M.saved:SetText(GG.Money(st.saved))
     M.of:SetText("of " .. GG.Money(st.amount))
     M.bar:SetValue(st.frac)

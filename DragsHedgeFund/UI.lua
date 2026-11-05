@@ -325,7 +325,7 @@ local function RefreshMain(m)
     m.saved:SetText(GG.Money(st.saved))
     m.bar:SetValue(st.frac)
     m.back:SetValue(st.frac2)
-    m.bar.pct:SetText(floor(st.frac * 100) .. "%")
+    m.bar.pct:SetText(GG.PctText(st.frac))
     m.of:SetText("|cffffd100Goal:|r " .. GG.Money(st.amount))
     m.need:SetText("|cffffd100Still need:|r " .. GG.Money(st.need))
 
