@@ -31,6 +31,7 @@ local function sendMoneyNow()
 end
 
 function GG.FillMail()
+    pending, sending, GG.mailInFlight = nil, nil, nil
     local db = GG.db
     local to = trim(P.name:GetText())
     if to == "" then P.msg:SetText("|cffff3030Type your alt's name.|r") return end
@@ -77,7 +78,15 @@ function GG.FillMail()
     if SendMailMoney and MoneyInputFrame_SetCopper then pcall(MoneyInputFrame_SetCopper, SendMailMoney, amt) end
     if SendMailFrame_CanSend then pcall(SendMailFrame_CanSend) end
 
-    pending = { to = to, amount = amt }
+    local entries = {}
+    for _, e in ipairs(db.log) do
+        if e.cut and not e.done then
+            local parts = {}
+            for id, c in pairs(e.remaining or {}) do parts[id] = c end
+            entries[#entries + 1] = { entry = e, parts = parts }
+        end
+    end
+    pending = { to = to, amount = amt, entries = entries }
     P.msg:SetText("|cff20ff20Filled in. Now press Send.|r")
 end
 
@@ -140,7 +149,19 @@ end
 -- When the mail really goes out, count it as saved.
 local function OnSendPressed()
     local to = SendMailNameEditBox and SendMailNameEditBox:GetText()
-    sending = { to = trim(to), money = sendMoneyNow() }
+    sending, GG.mailInFlight = nil, nil
+    if not pending or trim(to):lower() ~= pending.to:lower() then return end
+    if SendMailCODButton and SendMailCODButton.GetChecked and SendMailCODButton:GetChecked() then return end
+    if GetSendMailCOD and (GG.safe(GetSendMailCOD) or 0) > 0 then return end
+    local limits = {}
+    for _, item in ipairs(pending.entries) do
+        for id, c in pairs(item.parts) do
+            local remaining = item.entry.remaining and item.entry.remaining[id] or 0
+            limits[id] = (limits[id] or 0) + min(c, remaining)
+        end
+    end
+    sending = { to = trim(to), money = sendMoneyNow(), limits = limits }
+    GG.mailInFlight = sending.money > 0
 end
 
 local ev = CreateFrame("Frame")
@@ -154,23 +175,22 @@ ev:SetScript("OnEvent", function(_, e)
     if e == "MAIL_SHOW" then
         if not P then
             Build()
-            if SendMailFrame_SendMail and hooksecurefunc then hooksecurefunc("SendMailFrame_SendMail", OnSendPressed) end
             if SendMailMailButton and SendMailMailButton.HookScript then SendMailMailButton:HookScript("PreClick", OnSendPressed) end
         end
         if P then P:Show(); Refresh() end
     elseif e == "MAIL_CLOSED" then
-        pending, sending = nil, nil
+        pending, sending, GG.mailInFlight = nil, nil, nil
     elseif e == "MAIL_SEND_SUCCESS" then
         local s, p = sending, pending
-        sending = nil
+        pending, sending, GG.mailInFlight = nil, nil, nil
         if s and p and s.to:lower() == p.to:lower() and s.money > 0 then
             pending = nil
-            GG.ConfirmSaved(min(s.money, p.amount), p.to)
-            if P then P.msg:SetText("|cff20ff20Sent and saved!|r") end
+            local saved = GG.ConfirmSaved(min(s.money, p.amount), p.to, s.limits)
+            if P then P.msg:SetText(saved and "|cff20ff20Sent and saved!|r" or "Nothing left to mark saved.") end
             if GG.Refresh then GG.Refresh() end
         end
     elseif e == "MAIL_FAILED" then
-        sending = nil
+        sending, GG.mailInFlight = nil, nil
     end
     Refresh()
 end)

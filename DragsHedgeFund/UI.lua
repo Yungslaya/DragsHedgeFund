@@ -1,8 +1,8 @@
 local _, GG = ...
 
 local FONT = "Fonts\\FRIZQT__.TTF"
-local W = 380
-local CARD = 66      -- height of one goal card
+local W = 460
+local CARD = 78      -- height of one goal card
 local floor, max, min = math.floor, math.max, math.min
 
 local function text(parent, size, r, g, b, justify)
@@ -68,61 +68,73 @@ local confirm = { id = nil, at = 0 }   -- two-click Remove
 
 ------------------------------------------------------------ main view
 local function BuildMain(m)
-    m.owedLabel = text(m, 15, 1, 0.82, 0)
-    m.owedLabel:SetPoint("TOP", 0, -34)
+    local wallet = m:CreateTexture(nil, "BACKGROUND")
+    wallet:SetPoint("TOPLEFT", 18, -40)
+    wallet:SetSize(W - 36, 80)
+    wallet:SetColorTexture(0.035, 0.14, 0.18, 1)
+    m.spendLabel = text(m, 16, 0.75, 0.86, 0.85)
+    m.spendLabel:SetPoint("TOP", 0, -50)
+    m.spendLabel:SetText("CAN SPEND")
+    m.spend = text(m, 32)
+    m.spend:SetPoint("TOP", 0, -74)
+
+    m.owedLabel = text(m, 15, 0.93, 0.79, 0.47)
+    m.owedLabel:SetPoint("TOP", -W / 4 + 10, -134)
+    m.owedLabel:SetText("PUT AWAY")
     m.owed = text(m, 24)
-    m.owed:SetPoint("TOP", 0, -52)
-    m.saveBtn = button(m, "I saved it", 140, 28, 15, function() GG.ConfirmSaved(); GG.Refresh() end)
-    m.saveBtn:SetPoint("TOP", 0, -82)
-    m.spend = text(m, 20)
-    m.spend:SetPoint("TOP", 0, -116)
-    m.gain = text(m, 15)
-    m.gain:SetPoint("TOP", 0, -142)
-    m.gain:SetWidth(W - 40)
+    m.owed:SetPoint("TOP", -W / 4 + 10, -155)
+    m.storedLabel = text(m, 15, 0.7, 0.81, 0.95)
+    m.storedLabel:SetPoint("TOP", W / 4 - 10, -134)
+    m.storedLabel:SetText("STORED")
+    m.stored = text(m, 24)
+    m.stored:SetPoint("TOP", W / 4 - 10, -155)
+    m.saveBtn = button(m, "I put it away", 180, 28, 16, function() GG.ConfirmSaved(); GG.Refresh() end)
+    m.saveBtn:SetPoint("TOP", 0, -187)
 
-    m.none = text(m, 16, 0.8, 0.8, 0.8)
-    m.none:SetPoint("TOP", 0, -186)
-    m.none:SetText("No goals yet. Click Goals to add one.")
-
+    m.none = text(m, 17, 0.8, 0.86, 0.95)
+    m.none:SetPoint("TOP", 0, -242)
+    m.none:SetText("Click Goals to start saving.")
     m.cards = {}
     for i = 1, GG.MAX_GOALS do
         local c = CreateFrame("Frame", nil, m)
-        c:SetSize(W - 40, CARD - 6)
-        c:SetPoint("TOP", 0, -168 - (i - 1) * CARD)
-        c.name = text(c, 16, 1, 0.82, 0, "LEFT")
-        c.name:SetPoint("TOPLEFT", 4, 0)
-        c.name:SetPoint("RIGHT", c, "RIGHT", -60, 0)
+        c:SetSize(W - 36, CARD - 6)
+        c:SetPoint("TOP", 0, -228 - (i - 1) * CARD)
+        local bg = c:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints()
+        bg:SetColorTexture(0.065, 0.105, 0.17, i % 2 == 1 and 1 or 0.65)
+        c.name = text(c, 17, 0.97, 0.86, 0.6, "LEFT")
+        c.name:SetPoint("TOPLEFT", 10, -6)
+        c.name:SetWidth(W - 135)
         c.name:SetWordWrap(false)
-        c.pct = text(c, 15, 1, 1, 1, "RIGHT")
-        c.pct:SetPoint("TOPRIGHT", -4, 0)
-        c.bar = goalBar(c, W - 48, 22, 14)
-        c.bar:SetPoint("TOP", 0, -20)
+        c.pct = text(c, 15, 0.75, 0.84, 0.94, "RIGHT")
+        c.pct:SetPoint("TOPRIGHT", -10, -8)
+        c.bar = goalBar(c, W - 56, 20, 14)
+        c.bar:SetPoint("TOP", 0, -29)
         c.need = text(c, 14, 1, 1, 1, "LEFT")
-        c.need:SetPoint("TOPLEFT", 4, -46)
-        c.owed = text(c, 14, 0.8, 0.8, 0.8, "RIGHT")
-        c.owed:SetPoint("TOPRIGHT", -4, -46)
+        c.need:SetPoint("TOPLEFT", 10, -53)
+        c.owed = text(c, 14, 0.8, 0.85, 0.92, "RIGHT")
+        c.owed:SetPoint("TOPRIGHT", -10, -53)
         m.cards[i] = c
     end
-
-    m.tipHead = text(m, 16, 1, 0.82, 0, "LEFT")
-    m.tipHead:SetText("Tips")
+    m.gain = text(m, 14, 0.75, 0.84, 0.92)
+    m.gain:SetWidth(W - 48)
+    m.tipHead = text(m, 14, 0.93, 0.79, 0.47)
+    m.tipHead:SetText("")
     m.tips = {}
     for i = 1, 2 do
-        local t = text(m, 14, 1, 1, 1, "LEFT")
-        t:SetWidth(W - 54)
-        m.tips[i] = t
+        m.tips[i] = text(m, 14, 0.8, 0.85, 0.92)
+        m.tips[i]:SetWidth(W - 48)
     end
-
-    local bw, gap = 80, 6
+    local bw, gap = 96, 6
     local x = (W - (bw * 4 + gap * 3)) / 2
     local function bottom(label, f)
-        local b = button(m, label, bw, 26, 14, f)
-        b:SetPoint("BOTTOMLEFT", x, 18)
+        local b = button(m, label, bw, 28, 15, f)
+        b:SetPoint("BOTTOMLEFT", x, 17)
         x = x + bw + gap
         return b
     end
     m.goalBtn = bottom("Goals", function() GG.Show("setup") end)
-    m.listBtn = bottom("List", function() GG.listPage = 1; GG.Show("list") end)
+    m.listBtn = bottom("History", function() GG.listPage = 1; GG.Show("list") end)
     m.miniBtn = bottom("Overlay", function() GG.ToggleMini() end)
     m.tipBtn = bottom("Tip", function() GG.tipStep = GG.tipStep + 1; GG.Refresh() end)
 end
@@ -188,14 +200,14 @@ local function BuildSetup(s)
         r.amt = text(r, 13, 0.85, 0.85, 0.85, "LEFT")
         r.amt:SetPoint("TOPLEFT", 2, -19)
         r.minus = button(r, "-", 26, 24, 16, function()
-            local g = r.goal; if g then g.pct = max(g.pct - 5, 5); GG.Refresh() end
+            local g = r.goal; if g then GG.SetGoalPct(g, g.pct - 5); GG.Refresh() end
         end)
         r.minus:SetPoint("LEFT", r, "LEFT", 178, 0)
         r.pct = text(r, 15)
         r.pct:SetPoint("LEFT", r.minus, "RIGHT", 2, 0)
         r.pct:SetWidth(42)
         r.plus = button(r, "+", 26, 24, 16, function()
-            local g = r.goal; if g then g.pct = min(g.pct + 5, 100); GG.Refresh() end
+            local g = r.goal; if g then GG.SetGoalPct(g, g.pct + 5); GG.Refresh() end
         end)
         r.plus:SetPoint("LEFT", r.pct, "RIGHT", 2, 0)
         -- two clicks to remove, so a stray click can't delete a goal
@@ -269,17 +281,20 @@ end
 function GG.BuildUI()
     if F then return end
     local db = GG.db
+    local wasShown = db.shown
     F = CreateFrame("Frame", "DragsHedgeFundFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
     GG.frame = F
     F:SetSize(W, 480)
     F:SetFrameStrata("MEDIUM")
     F:SetClampedToScreen(true)
     F:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        bgFile = "Interface\\Buttons\\WHITE8X8",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
         tile = true, tileSize = 32, edgeSize = 32,
         insets = { left = 11, right = 12, top = 12, bottom = 11 },
     })
+    F:SetBackdropColor(0.035, 0.06, 0.105, 0.98)
+    F:SetBackdropBorderColor(0.68, 0.72, 0.76, 1)
     local p = db.pos
     if p then F:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else F:SetPoint("RIGHT", -80, 40) end
     F:EnableMouse(true)
@@ -293,12 +308,12 @@ function GG.BuildUI()
     end)
 
     local header = F:CreateTexture(nil, "ARTWORK")
-    header:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Header")
-    header:SetSize(280, 64)
-    header:SetPoint("TOP", 0, 12)
-    local title = text(F, 15, 1, 0.82, 0)
-    title:SetPoint("TOP", header, "TOP", 0, -14)
-    title:SetText("Drags Hedge Fund")
+    header:SetColorTexture(0.11, 0.17, 0.25, 1)
+    header:SetSize(W - 28, 28)
+    header:SetPoint("TOP", 0, -10)
+    local title = text(F, 17, 0.96, 0.86, 0.61)
+    title:SetPoint("TOP", 0, -14)
+    title:SetText("DRAGS HEDGE FUND")
 
     local close = CreateFrame("Button", nil, F, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", -6, -6)
@@ -322,7 +337,7 @@ function GG.BuildUI()
     tinsert(UISpecialFrames, "DragsHedgeFundFrame")
 
     GG.Show(#db.goals > 0 and "main" or "setup")
-    if not db.shown then F:Hide() end
+    if not wasShown then GG.Hide() end
 end
 
 function GG.Show(view)
@@ -370,7 +385,7 @@ local function RefreshSetup(s)
         local p = b.preset
         b:SetText(p.name .. "  (" .. GG.Commas(GG.PresetGold(p)) .. "g)")
     end
-    s.note:SetText(GG.CLASS_MOUNT[class] and "Class quest mount: riding only." or "Riding + mount")
+    s.note:SetText("Each gain: " .. GG.TotalPct() .. "% saved (100% max)")
     F:SetHeight(560)
 end
 
@@ -379,24 +394,19 @@ local function RefreshMain(m)
     local goals = db.goals
     local owed = GG.TotalOwed()
 
-    if owed > 0 then
-        local n = GG.OwedCount()
-        m.owedLabel:SetText("To put away  |cffaaaaaa(" .. n .. " gain" .. (n == 1 and "" or "s") .. ")|r")
-        m.owed:SetText(GG.Money(owed))
-        m.saveBtn:Show()
-    else
-        m.owedLabel:SetText("To put away")
-        m.owed:SetText("|cffaaaaaaNothing right now|r")
-        m.saveBtn:Hide()
-    end
-
-    m.spend:SetText(GG.SpendText())
+    m.owedLabel:SetText("PUT AWAY")
+    m.owed:SetText(GG.Money(owed))
+    m.stored:SetText(GG.Money(GG.TotalSaved()))
+    m.saveBtn:SetShown(owed > 0)
+    local spend = GG.CanSpend()
+    m.spendLabel:SetText(spend < 0 and "|cffff7777SHORT ON SAVINGS|r" or "CAN SPEND")
+    m.spend:SetText(GG.Money(math.abs(spend)))
 
     local now = GetTime()
     if GG.lastAt and now - GG.lastAt < 20 and (GG.lastPut or 0) > 0 then
-        m.gain:SetText("|cff20ff20+|r" .. GG.Money(GG.lastGain) .. "  |cffffd100put away|r " .. GG.Money(GG.lastPut))
+        m.gain:SetText("Received " .. GG.Money(GG.lastGain) .. "   Put away " .. GG.Money(GG.lastPut))
     else
-        m.gain:SetText("|cffffd100Total saved:|r " .. GG.Money(GG.TotalSaved()))
+        m.gain:SetText("")
     end
 
     m.none:SetShown(#goals == 0)
@@ -406,31 +416,27 @@ local function RefreshMain(m)
         if g then
             local st = GG.GoalStatus(g)
             c.name:SetText(g.name)
-            c.pct:SetText(g.pct .. "%")
+            c.pct:SetText(g.pct .. "% / gain")
             c.bar.top:SetValue(st.frac)
             c.bar:SetValue(st.frac2)
             c.bar.label:SetText(GG.Money(g.saved) .. "  |cffccccccof|r " .. GG.Money(g.amount) .. "  |cffcccccc(" .. GG.PctText(st.frac) .. ")|r")
             if st.done then
-                c.need:SetText("|cff20ff20GOAL MET! Go buy it.|r")
+                c.need:SetText("|cff7bddacGOAL MET|r")
             elseif st.allIn then
-                c.need:SetText("|cffffd100Put away the rest!|r")
+                c.need:SetText("|cffffd100Ready to put away|r")
             else
-                c.need:SetText("|cffffd100Still need:|r " .. GG.Money(st.need))
+                c.need:SetText("Still need: " .. GG.Money(st.need))
             end
-            c.owed:SetText(g.owed > 0 and ("owed " .. GG.Money(g.owed)) or "")
+            c.owed:SetText(g.owed > 0 and ("Put away " .. GG.Money(g.owed)) or "")
         end
     end
 
-    -- tips go under the last card
-    local y = -168 - max(#goals, 1) * CARD - 4
-    m.tipHead:ClearAllPoints(); m.tipHead:SetPoint("TOPLEFT", 24, y)
-    local tips = GG.Tips()
-    for i = 1, 2 do
-        m.tips[i]:ClearAllPoints()
-        m.tips[i]:SetPoint("TOPLEFT", 30, y - i * 21)
-        m.tips[i]:SetText(tips[i] or "")
-    end
-    F:SetHeight(-y + 2 * 21 + 30 + 56)
+    local y = -228 - max(#goals, 1) * CARD - 4
+    m.gain:ClearAllPoints(); m.gain:SetPoint("TOP", 0, y)
+    m.tips[1]:ClearAllPoints(); m.tips[1]:SetPoint("TOP", 0, y - 24)
+    m.tips[1]:SetText(GG.Tips()[1] or "")
+    m.tips[2]:SetText("")
+    F:SetHeight(-y + 92)
 end
 
 local function RefreshList(l)
@@ -458,7 +464,7 @@ local function RefreshList(l)
                 r.c:SetText(GG.Money(e.saved))
             else
                 r.b:SetText(GG.Money(e.gain))
-                r.c:SetText(GG.Money(e.cut) .. (e.done and " |cff20ff20ok|r" or " |cffffd100owed|r"))
+                r.c:SetText(GG.Money(e.done and e.cut or e.unpaid or e.cut) .. (e.done and " |cff20ff20ok|r" or " |cffffd100owed|r"))
             end
         else
             r.a:SetText(""); r.b:SetText(""); r.c:SetText("")

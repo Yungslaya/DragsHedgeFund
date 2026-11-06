@@ -15,9 +15,9 @@ GG.TIPS = {
     "Sell gray items to a vendor.",
     "Loot every mob.",
     "Sell cloth on the AH.",
-    "Repair only when gear is yellow.",
+    "Check repair costs before buying gear.",
     "Quests pay gold. Do them all.",
-    "Don't buy food. Loot it.",
+    "Keep looted food for later.",
 }
 
 -- Tips for professions you HAVE. Keyed by skill line, name as backup.

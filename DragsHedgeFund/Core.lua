@@ -5,14 +5,15 @@ local floor, max, min = math.floor, math.max, math.min
 local COPPER_PER_GOLD = 10000
 
 local function isNum(v)
-    return type(v) == "number" and not (issecretvalue and issecretvalue(v))
+    return type(v) == "number" and not (issecretvalue and issecretvalue(v)) and v == v and v > -math.huge and v < math.huge
 end
 GG.isNum = isNum
 
 local function safe(f, ...)
     if type(f) ~= "function" then return end
-    local r = { pcall(f, ...) }
-    if r[1] then return unpack(r, 2) end
+    local function pack(...) return { n = select("#", ...), ... } end
+    local r = pack(pcall(f, ...))
+    if r[1] then return unpack(r, 2, r.n) end
 end
 GG.safe = safe
 
@@ -41,11 +42,91 @@ do
         local g, s, cp = floor(c / 10000), floor(c / 100) % 100, c % 100
         local out = {}
         if g > 0 then out[#out + 1] = "|cffffd700" .. commas(g) .. "|r" .. ICON:format("Gold") end
-        if s > 0 and g < 1000 then out[#out + 1] = "|cffd0d0d8" .. s .. "|r" .. ICON:format("Silver") end
-        if (cp > 0 and g < 10) or c == 0 then out[#out + 1] = "|cffeda55f" .. cp .. "|r" .. ICON:format("Copper") end
+        if s > 0 then out[#out + 1] = "|cffd0d0d8" .. s .. "|r" .. ICON:format("Silver") end
+        if cp > 0 or c == 0 then out[#out + 1] = "|cffeda55f" .. cp .. "|r" .. ICON:format("Copper") end
         return table.concat(out, " ")
     end
 end
+
+
+-- Keep reservations within the money actually received.
+function GG.TotalPct(except)
+    local total = 0
+    for _, g in ipairs(GG.db.goals) do if g ~= except then total = total + g.pct end end
+    return total
+end
+
+function GG.SetGoalPct(g, pct)
+    g.pct = min(max(floor(pct), 0), 100 - GG.TotalPct(g))
+end
+
+function GG.AllocateGain(gain)
+    local parts, candidates, exact, assigned = {}, {}, 0, 0
+    for i, g in ipairs(GG.db.goals) do
+        local share = min(gain * g.pct / 100, max(g.amount - g.saved - g.owed, 0))
+        local whole = floor(share)
+        parts[g.id], exact, assigned = whole, exact + share, assigned + whole
+        candidates[#candidates + 1] = { id = g.id, fraction = share - whole, order = i }
+    end
+    table.sort(candidates, function(a, b)
+        if a.fraction == b.fraction then return a.order < b.order end
+        return a.fraction > b.fraction
+    end)
+    local extra = min(gain, floor(exact + 0.5)) - assigned
+    for _, c in ipairs(candidates) do
+        if extra > 0 and c.fraction > 0 then
+            parts[c.id], assigned, extra = parts[c.id] + 1, assigned + 1, extra - 1
+        end
+    end
+    return assigned, parts
+end
+
+function GG.UpdateEntry(e)
+    if not e.cut then return end
+    local unpaid = 0
+    for _, c in pairs(e.remaining or {}) do unpaid = unpaid + c end
+    e.unpaid, e.done = unpaid, unpaid == 0
+end
+
+function GG.TrimLog()
+    -- Never discard an unpaid gain. Keep the newest 300 settled records as well.
+    local log, paid = GG.db.log, 0
+    for i = #log, 1, -1 do
+        if not log[i].cut or log[i].done then
+            paid = paid + 1
+            if paid > 300 then table.remove(log, i) end
+        end
+    end
+end
+
+function GG.RepairLedger()
+    local db, totals = GG.db, {}
+    for _, g in ipairs(db.goals) do totals[g.id] = g.owed end
+    for _, e in ipairs(db.log) do
+        if e.cut then
+            local original = e.remaining or (not e.done and e.parts) or {}
+            local remaining = {}
+            -- Old single-goal records have no parts map.
+            if not e.parts and not e.done and db.goals[1] then
+                original = { [db.goals[1].id] = e.cut }
+            end
+            for _, g in ipairs(db.goals) do
+                local c = min(max(original[g.id] or 0, 0), totals[g.id])
+                remaining[g.id], totals[g.id] = c, totals[g.id] - c
+            end
+            e.remaining = remaining
+            GG.UpdateEntry(e)
+        end
+    end
+    local missing, parts = 0, {}
+    for id, c in pairs(totals) do parts[id], missing = c, missing + c end
+    if missing > 0 then
+        table.insert(db.log, 1, { t = time(), gain = 0, cut = missing, remaining = parts,
+            parts = parts, unpaid = missing, carried = true })
+    end
+    GG.TrimLog()
+end
+
 
 ------------------------------------------------------------ saved data
 GG.MAX_GOALS = 5
@@ -83,6 +164,17 @@ function GG.InitDB()
     if db.mini == nil then db.mini = true end
     if db.shown == nil then db.shown = true end
     GG.db = db
+    local available, adjusted = 100, false
+    for _, g in ipairs(db.goals) do
+        local old = g.pct
+        g.pct = min(max(floor(isNum(g.pct) and g.pct or db.pct), 0), available)
+        adjusted = adjusted or old ~= g.pct
+        available = available - g.pct
+    end
+    if adjusted then
+        print("|cffffd700Hedge Fund:|r goal percentages were reduced to keep the total at 100% or less.")
+    end
+    GG.RepairLedger()
 end
 
 ------------------------------------------------------------ goals
@@ -102,6 +194,13 @@ end
 
 function GG.AddGoal(name, gold, pct)
     local db = GG.db
+    if type(name) ~= "string" or not name:match("%S") then return false, "Type a goal name." end
+    if not isNum(gold) or gold <= 0 or gold > 999999 then return false, "Use 1 to 999999 gold." end
+    pct = pct or min(db.pct, 100 - GG.TotalPct())
+    if not isNum(pct) or pct < 0 or pct > 100 - GG.TotalPct() then
+        return false, "All goal percentages together must be 100% or less."
+    end
+    name = name:sub(1, 48):gsub("|", "")
     if #db.goals >= GG.MAX_GOALS then return false, "You can have " .. GG.MAX_GOALS .. " goals." end
     for _, g in ipairs(db.goals) do
         if g.name == name then return false, "You already have that goal." end
@@ -115,7 +214,13 @@ end
 function GG.RemoveGoal(id)
     local goals = GG.db.goals
     for i, g in ipairs(goals) do
-        if g.id == id then table.remove(goals, i) return end
+        if g.id == id then
+            for _, e in ipairs(GG.db.log) do
+                if e.remaining then e.remaining[id] = nil; GG.UpdateEntry(e) end
+            end
+            table.remove(goals, i)
+            return
+        end
     end
 end
 
@@ -149,31 +254,25 @@ function GG.OnMoney(silent)
     local db = GG.db
     if silent then
         -- loading screens: just remember the amount. 0 may mean "not loaded yet".
-        db.lastMoney = (m > 0) and m or nil
+        db.lastMoney = m
         return
     end
     if isNum(db.lastMoney) and m > db.lastMoney then
         local gain = m - db.lastMoney
-        local total, parts = 0, {}
-        for _, g in ipairs(db.goals) do
-            -- each goal takes its own % of this one gain, never more than it still needs
-            local cut = min(floor(gain * g.pct / 100 + 0.5), max(g.amount - g.saved - g.owed, 0))
-            if cut > 0 then
-                g.owed = g.owed + cut
-                parts[g.id] = cut
-                total = total + cut
-            end
-        end
+        local total, parts = GG.AllocateGain(gain)
+        for _, g in ipairs(db.goals) do g.owed = g.owed + (parts[g.id] or 0) end
         if total > 0 then
             local log = db.log
-            log[#log + 1] = { t = time(), gain = gain, cut = total, parts = parts }
-            while #log > 300 do table.remove(log, 1) end
+            local remaining = {}
+            for id, c in pairs(parts) do remaining[id] = c end
+            log[#log + 1] = { t = time(), gain = gain, cut = total, parts = parts, remaining = remaining }
+            GG.TrimLog()
         end
         GG.lastGain, GG.lastPut, GG.lastAt = gain, total, GetTime()
     end
     -- spent into the gold you still have to put away? warn once
     local owed = GG.TotalOwed()
-    if isNum(db.lastMoney) and m < db.lastMoney and owed > 0 and m < owed and db.lastMoney >= owed then
+    if not GG.mailInFlight and isNum(db.lastMoney) and m < db.lastMoney and owed > 0 and m < owed and db.lastMoney >= owed then
         print("|cffffd700Hedge Fund:|r |cffff3030You spent into your savings! You are short " ..
             GG.Money(owed - m) .. ".|r")
         if PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.RAID_WARNING or 8959) end
@@ -192,47 +291,47 @@ end
 -- "Can spend: 12g" in green, or "Spent into savings: 1g" in red
 function GG.SpendText(short)
     local spend = GG.CanSpend()
-    local money = short and GG.MoneyShort or GG.Money
+    local money = GG.Money
     if spend >= 0 then return "|cff20ff20Can spend:|r " .. money(spend) end
     return "|cffff3030Spent into savings:|r " .. money(-spend)
 end
 
 -- You moved the gold somewhere safe (bank alt, mail...). Count it as saved.
 -- amt: how much (default all of it). to: who it was mailed to, if mailed.
-function GG.ConfirmSaved(amt, to)
+function GG.ConfirmSaved(amt, to, limits)
     local db = GG.db
     local owed = GG.TotalOwed()
-    if owed <= 0 then return end
-    amt = min(amt or owed, owed)
+    if owed <= 0 or (amt ~= nil and not isNum(amt)) then return end
+    amt = floor(min(amt or owed, owed))
     if amt <= 0 then return end
-    if amt >= owed then
-        for _, e in ipairs(db.log) do if e.cut and not e.done then e.done = true end end
-    else
-        -- only part of it: mark the oldest gains first
-        local left = amt
-        for _, e in ipairs(db.log) do
-            if e.cut and not e.done and e.cut <= left then e.done = true; left = left - e.cut end
-        end
-    end
-    -- hand it out to the goals, top goal first
-    local left = amt
+    local left, savedParts = amt, {}
     for _, g in ipairs(db.goals) do
-        local take = min(g.owed, left)
+        local take = min(g.owed, left, limits and (limits[g.id] or 0) or g.owed)
         if take > 0 then
-            g.owed = g.owed - take
-            g.saved = g.saved + take
-            left = left - take
+            g.owed, g.saved = g.owed - take, g.saved + take
+            savedParts[g.id], left = take, left - take
+            local payment = take
+            for _, e in ipairs(db.log) do
+                if e.remaining and payment > 0 then
+                    local used = min(e.remaining[g.id] or 0, payment)
+                    e.remaining[g.id] = (e.remaining[g.id] or 0) - used
+                    payment = payment - used
+                    GG.UpdateEntry(e)
+                end
+            end
             if g.saved >= g.amount and not g.metSound then
                 g.metSound = true
                 if PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.LEVEL_UP or 888) end
-                print("|cffffd700Hedge Fund:|r |cff20ff20" .. g.name .. ": GOAL MET!|r")
             end
         end
     end
-    db.log[#db.log + 1] = { t = time(), saved = amt, to = to }
-    while #db.log > 300 do table.remove(db.log, 1) end
-    print("|cffffd700Hedge Fund:|r saved " .. GG.Money(amt) .. (to and (" (mailed to " .. to .. ")") or "") ..
-        ". Total saved: " .. GG.Money(GG.TotalSaved()))
+    local actual = amt - left
+    if actual <= 0 then return end
+    db.log[#db.log + 1] = { t = time(), saved = actual, to = to, parts = savedParts }
+    GG.TrimLog()
+    print("|cffffd700Hedge Fund:|r saved " .. GG.Money(actual) ..
+        (to and (" (mailed to " .. to .. ")") or "") .. ". Total saved: " .. GG.Money(GG.TotalSaved()))
+    return actual
 end
 
 -- 0.0005 -> "under 1%" (plain floor would show 0% and look broken)
@@ -344,7 +443,8 @@ ev:SetScript("OnEvent", function(_, e)
     elseif not GG.db then
         return
     elseif e == "PLAYER_ENTERING_WORLD" then
-        GG.OnMoney(true)
+        -- Zoning must not erase a gain observed before the next money event.
+        GG.OnMoney()
     elseif e == "PLAYER_MONEY" then
         GG.OnMoney()
     elseif e == "BAG_UPDATE_DELAYED" then
@@ -367,7 +467,8 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
     elseif cmd == "goal" then
         GG.Show("setup")
     elseif cmd == "pct" and num then
-        db.pct = min(max(floor(num), 1), 100)
+        local count = max(#db.goals, 1)
+        db.pct = min(max(floor(num), 0), floor(100 / count))
         for _, g in ipairs(db.goals) do g.pct = db.pct end
         print("|cffffd700Hedge Fund:|r every goal now saves " .. db.pct .. "% of each gain.")
     elseif (cmd == "add" or cmd == "set") and num then
@@ -390,7 +491,9 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
         GG.ConfirmSaved()
     elseif cmd == "reset" then
         wipe(db.goals)
-        for _, e in ipairs(db.log) do if e.cut then e.done = true end end
+        for _, e in ipairs(db.log) do
+            if e.cut then e.remaining = {}; GG.UpdateEntry(e) end
+        end
         print("|cffffd700Hedge Fund:|r all goals cleared.")
     else
         print("|cffffd700Hedge Fund:|r /gg  - show or hide")

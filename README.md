@@ -2,12 +2,12 @@
 
 Gold savings helper for **WoW: Forever** (Interface 16001).
 
-**What's new (1.2.0):** **Can spend** shows how much of your bag gold is yours to spend, so you don't spend what you still have to put away.
+**What's new (1.3.0):** a new bank-counter layout with a large **Can spend** amount, separate **Put away** and **Stored** totals, and roomier goal rows. Savings records and mail handling are more accurate.
 
 ## How it works
 
 1. Click **Goals** and add one or more goals: **Level 40 mount** (200g), **Level 60 epic mount** (2,000g), or your own name and gold amount. Up to 5.
-2. Set the % for each goal (20% to start). Every gold gain (loot, quests, sales, mail) gives each goal its own cut.
+2. Set the % for each goal (20% to start). All goals together are limited to 100%; 0% pauses a goal. Every gold gain (loot, quests, sales, mail) gives each goal its own cut.
 3. The cuts add up in **To put away**.
 4. Put that gold somewhere safe (a bank alt, for example), then click **I saved it**.
 5. Only gold you confirm counts as saved. Gold you had before is yours and is never counted.
@@ -15,7 +15,9 @@ Gold savings helper for **WoW: Forever** (Interface 16001).
 **Can spend** = your bag gold minus To put away. It turns red if you spend into your savings.
 
 Each goal shows **saved of goal**, a bar, and **Still need**. A full goal stops taking cuts and says **GOAL MET!**
-The **List** shows every gain, its cut, and every time you saved.
+**History** shows each recorded gold increase, its savings cut, and each deposit. Partial deposits show the amount still owed. Unpaid records are kept until settled; the newest 300 settled records are retained.
+
+Gold increases are read from Blizzard's money events. If the game combines several changes into one event, the addon sees their combined change.
 
 ## Mail it to your alt
 
@@ -50,3 +52,10 @@ Use the Dragbags Addon Updater, or copy the `DragsHedgeFund` folder into `World 
 - Mount and riding prices from Wowhead (Forever). Paladins and Warlocks get their mount from a class quest, so their goals count riding only.
 - Tips are only for professions you have.
 - Display only. It never buys, sells, sends mail or trades for you. You press Send.
+
+## Tests
+
+Install Python and lupa==2.8, then run: python tests/test_review.py
+The tests cover savings arithmetic, partial deposits, migration, history retention,
+zero-gold login, mail success/failure/COD, and loading the UI with fake combat secret values.
+The fake client does not prove visual fit or mail API behavior in the live game.
