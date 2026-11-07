@@ -2,12 +2,14 @@
 ## Title: |cffffd700Drags|r Hedge Fund
 ## Notes: Saves part of every gold gain for your mount. Type /gg
 ## Author: Yungslaya
-## Version: 1.3.0
+## Version: 1.4.0
 ## SavedVariablesPerCharacter: DragsHedgeFundDB
+## SavedVariables: DragsHedgeFundAccountDB
 ## IconTexture: Interface\Icons\INV_Misc_Coin_01
 
 Data.lua
 Core.lua
+Characters.lua
 UI.lua
 Mini.lua
 Mail.lua

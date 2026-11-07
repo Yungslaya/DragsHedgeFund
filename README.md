@@ -1,61 +1,100 @@
 # Drags Hedge Fund
 
-Gold savings helper for **WoW: Forever** (Interface 16001).
+Gold savings helper for WoW: Forever (Interface 16001).
 
-**What's new (1.3.0):** a new bank-counter layout with a large **Can spend** amount, separate **Put away** and **Stored** totals, and roomier goal rows. Savings records and mail handling are more accurate.
+**What's new in 1.4.0:** gold totals across characters, shared goals, and an optional one-time contribution from existing gold.
 
-## How it works
+## Start here
 
-1. Click **Goals** and add one or more goals: **Level 40 mount** (200g), **Level 60 epic mount** (2,000g), or your own name and gold amount. Up to 5.
-2. Set the % for each goal (20% to start). All goals together are limited to 100%; 0% pauses a goal. Every gold gain (loot, quests, sales, mail) gives each goal its own cut.
-3. The cuts add up in **To put away**.
-4. Put that gold somewhere safe (a bank alt, for example), then click **I saved it**.
-5. Only gold you confirm counts as saved. Gold you had before is yours and is never counted.
+1. Fully restart WoW after installing this update. The new account-wide saved data needs a restart.
+2. Log into each character once with the addon enabled.
+3. Open /gg and click **Characters** to see your total and each character's balance.
+4. Each character you are playing updates live. Alts show their last recorded balance and the date.
+5. Only bag gold is counted. Bank balances, unclaimed mail, auctions and other currencies are not added.
 
-**Can spend** = your bag gold minus To put away. It turns red if you spend into your savings.
+## Personal and shared goals
 
-Each goal shows **saved of goal**, a bar, and **Still need**. A full goal stops taking cuts and says **GOAL MET!**
-**History** shows each recorded gold increase, its savings cut, and each deposit. Partial deposits show the amount still owed. Unpaid records are kept until settled; the newest 300 settled records are retained.
+- **This character** saves to that character's personal goals.
+- **Shared goals** saves to the common goals for this realm.
+- The current character remembers which mode you select. Enabling shared goals makes them the default for new alts.
+- Click **Goals**, then **Share** beside an existing personal goal to move its target, stored amount and pending amount into shared goals.
+- You can also select **Shared goals** and add a new goal.
+- Each goal has its own percentage. The percentages in the selected mode total no more than 100%. Set 0% to pause a goal.
+- Shared progress is visible on every character using Shared goals. Personal goals are preserved in the other mode.
+- Other realms appear in the total, but have separate shared goals because their gold may not be transferable.
 
-Gold increases are read from Blizzard's money events. If the game combines several changes into one event, the addon sees their combined change.
+## Existing gold is optional
 
-## Mail it to your alt
+By default, only future gold increases get a cut. Logging into an alt does not count its existing gold as earnings.
 
-At a mailbox a small Hedge Fund box shows next to the mail window.
-Type your alt's name once (it remembers it), click **Fill in mail**, then press **Send** yourself.
-It fills in the gold, a subject, and a note with the date, the amount and each goal's part.
-When the mail goes out, that gold counts as saved.
+To reserve a percentage of existing gold:
+1. Select **Shared goals** and set their percentages.
+2. Open **Characters**, then click **Use current gold for shared goals**.
+3. Read the preview and click **Reserve it**.
 
-## Overlay
+Example: Alice has 60g and Bob has 40g. One shared goal at 20% reserves 12g from Alice and 8g from Bob.
+The same existing balance is not reserved again for that goal. A new alt can contribute once it has been recorded.
+Existing pending contributions and recorded stored savings are excluded from the available pool.
+Alt balances are snapshots. Refresh them by logging into each character before making a pooled contribution.
 
-A small box that stays on screen: to put away (with a **Saved** button), total saved, one row per goal, and one tip.
-Drag to move. Right-click to open the big window.
+Reserving money only increases **Put away**. It does not mark the money as stored or move it.
+
+## Put the money away
+
+Each character owes only its own contributions. Mail or bank that gold, then click **I put it away**.
+The mailbox helper fills the recipient, amount and goal note. You press Blizzard's Send button.
+On a successful send, only that character's contribution is confirmed.
+
+**Stored** is confirmed savings. **Can spend (here)** is bag gold minus pending contributions on this character.
+Personal contributions remain protected when you switch to Shared goals.
+
+The main window shows **All characters** as well. This is remembered bag gold, not stored progress.
+
+## Moving your own gold between alts
+
+Receiving your own gold normally looks like a new gain to the money API.
+Immediately before collecting an own transfer, open **Characters** and click **Skip next own transfer**.
+The next money increase is ignored, even if it is loot instead. Normal tracking then resumes.
+The skip expires after 30 minutes if unused. This does not transfer money for you.
+
+## History and overlay
+
+History shows recorded money increases, cuts and deposits. Partial deposits show what is still owed.
+Unpaid entries are retained until settled. The newest 300 settled records are retained.
+Blizzard may combine several balance changes into one money event.
+
+The overlay shows this character's spendable amount, contribution due and goal progress.
+Drag it to move; right-click opens the full window.
 
 ## Commands
 
-- `/gg` - show or hide (also `/hedge`)
-- `/gg goal` - add or change goals
-- `/gg mini` - overlay on or off
-- `/gg lock` - lock the overlay
-- `/gg scale 1.2` - overlay size
-- `/gg pct 20` - every goal saves 20%
-- `/gg saved` - same as the I saved it button
-- `/gg add 10 2` / `/gg set 50 1` - fix a goal's saved amount (gold, goal number)
-- `/gg reset` - clear all goals
+- /gg, /hedge, /dhf: open or close
+- /gg characters: character gold list
+- /gg shared: save to shared goals
+- /gg personal: save to personal goals
+- /gg transfer: ignore the next incoming own transfer
+- /gg goal: manage goals
+- /gg mini: overlay on or off
+- /gg lock: lock the overlay
+- /gg scale 1.2: overlay size
+- /gg pct 20: set each goal in the selected mode to 20%, capped to a combined 100%
+- /gg saved: confirm this character's pending contribution in the selected mode
+- /gg add 10 2 or /gg set 50 1: fix a goal's stored amount
+- /gg reset: clear goals in the selected mode; Shared mode clears shared goals for this realm
 
-## Install
+## Install and tests
 
-Use the Dragbags Addon Updater, or copy the `DragsHedgeFund` folder into `World of Warcraft\_forever_\Interface\AddOns\` and fully restart WoW.
+Install with the Dragbags Addon Updater, or copy DragsHedgeFund into _forever_/Interface/AddOns/.
+This update needs a full WoW restart for the new account-wide saved-variable registration.
+
+Install Python and lupa==2.8, then run: python tests/test_review.py
+25 fake-WoW checks cover existing features, character switching, shared contributions, snapshots, pool confirmation and alt mail.
+Live-game layout and mailbox integration still need an in-game check.
 
 ## Notes
 
-- Mount and riding prices from Wowhead (Forever). Paladins and Warlocks get their mount from a class quest, so their goals count riding only.
-- Tips are only for professions you have.
-- Display only. It never buys, sells, sends mail or trades for you. You press Send.
-
-## Tests
-
-Install Python and lupa==2.8, then run: python tests/test_review.py
-The tests cover savings arithmetic, partial deposits, migration, history retention,
-zero-gold login, mail success/failure/COD, and loading the UI with fake combat secret values.
-The fake client does not prove visual fit or mail API behavior in the live game.
+Display only. It never buys, sells, trades or sends mail for you.
+The preset riding and mount amounts are estimates from earlier Wowhead Forever research.
+The character-gold approach was checked against BagSync's public events and gold modules:
+https://github.com/Xruptor/BagSync/blob/master/wireframe/events.lua
+https://github.com/Xruptor/BagSync/blob/master/modules/gold.lua

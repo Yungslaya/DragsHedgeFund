@@ -1,3 +1,24 @@
+# Character tracking and shared goals — 1.4.0
+
+- Adds account-wide saved wallets, keyed by character GUID with a realm/name fallback.
+- Preserves the per-character saved database and existing goals.
+- Separates shared ledgers by realm. The all-character total still displays every recorded character.
+- Shared pending entries have a character owner. Confirmation and mail cannot pay another character's reservations.
+- Spendable gold protects pending obligations in both the personal and shared ledgers.
+- Existing gold is excluded from automatic gain tracking. Pooled reservation requires a preview and confirmation.
+- Pooled contributions use free recorded balances after pending amounts and recorded stored savings.
+- Each character's existing balance can seed a goal once; confirmation rechecks the preview signature.
+- Snapshot timestamps and bag-only scope are visible in the UI.
+- Realm scopes and per-character mode preferences are independent.
+- The explicit own-transfer skip ignores exactly one increase and expires after 30 minutes.
+- Adds 12 checks to the prior 13, for 25 total. No live offline-alt API is assumed.
+
+This adds a new SavedVariables registration and therefore requires a full client restart.
+The module does not import other addons' private databases and does not move currency.
+
+
+---
+
 # Review and changes for 1.3.0
 
 Reviewed the published main commit 32812d3 against the clean local checkout.

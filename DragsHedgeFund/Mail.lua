@@ -57,10 +57,11 @@ function GG.FillMail()
     -- one line per goal that has gold waiting
     local lines, names = {}, {}
     for _, g in ipairs(db.goals) do
-        if g.owed > 0 then
+        local owed = GG.MyGoalOwed and GG.MyGoalOwed(g) or g.owed
+        if owed > 0 then
             names[#names + 1] = g.name
-            lines[#lines + 1] = "- " .. g.name .. ": " .. GG.MoneyPlain(g.owed) ..
-                " (saved " .. GG.MoneyPlain(g.saved + g.owed) .. " of " .. GG.MoneyPlain(g.amount) .. ")"
+            lines[#lines + 1] = "- " .. g.name .. ": " .. GG.MoneyPlain(owed) ..
+                " (saved " .. GG.MoneyPlain(g.saved + owed) .. " of " .. GG.MoneyPlain(g.amount) .. ")"
         end
     end
     local subject = #names == 1 and ("Savings: " .. names[1]) or ("Savings: " .. #names .. " goals")
@@ -80,14 +81,19 @@ function GG.FillMail()
 
     local entries = {}
     for _, e in ipairs(db.log) do
-        if e.cut and not e.done then
+        if e.cut and not e.done and GG.EntryIsMine(e) then
             local parts = {}
             for id, c in pairs(e.remaining or {}) do parts[id] = c end
             entries[#entries + 1] = { entry = e, parts = parts }
         end
     end
-    pending = { to = to, amount = amt, entries = entries }
+    pending = { to = to, amount = amt, entries = entries, ledger = db.goals }
     P.msg:SetText("|cff20ff20Filled in. Now press Send.|r")
+end
+
+function GG.CancelMailDraft()
+    pending, sending, GG.mailInFlight = nil, nil, nil
+    if P then P.msg:SetText("Goals changed. Fill the mail again.") end
 end
 
 local function Refresh()
@@ -150,7 +156,7 @@ end
 local function OnSendPressed()
     local to = SendMailNameEditBox and SendMailNameEditBox:GetText()
     sending, GG.mailInFlight = nil, nil
-    if not pending or trim(to):lower() ~= pending.to:lower() then return end
+    if not pending or pending.ledger ~= GG.db.goals or trim(to):lower() ~= pending.to:lower() then return end
     if SendMailCODButton and SendMailCODButton.GetChecked and SendMailCODButton:GetChecked() then return end
     if GetSendMailCOD and (GG.safe(GetSendMailCOD) or 0) > 0 then return end
     local limits = {}
@@ -183,7 +189,7 @@ ev:SetScript("OnEvent", function(_, e)
     elseif e == "MAIL_SEND_SUCCESS" then
         local s, p = sending, pending
         pending, sending, GG.mailInFlight = nil, nil, nil
-        if s and p and s.to:lower() == p.to:lower() and s.money > 0 then
+        if s and p and p.ledger == GG.db.goals and s.to:lower() == p.to:lower() and s.money > 0 then
             pending = nil
             local saved = GG.ConfirmSaved(min(s.money, p.amount), p.to, s.limits)
             if P then P.msg:SetText(saved and "|cff20ff20Sent and saved!|r" or "Nothing left to mark saved.") end

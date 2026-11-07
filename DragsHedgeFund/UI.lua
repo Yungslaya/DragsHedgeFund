@@ -70,17 +70,20 @@ local confirm = { id = nil, at = 0 }   -- two-click Remove
 local function BuildMain(m)
     local wallet = m:CreateTexture(nil, "BACKGROUND")
     wallet:SetPoint("TOPLEFT", 18, -40)
-    wallet:SetSize(W - 36, 80)
+    wallet:SetSize(W - 36, 90)
     wallet:SetColorTexture(0.035, 0.14, 0.18, 1)
     m.spendLabel = text(m, 16, 0.75, 0.86, 0.85)
     m.spendLabel:SetPoint("TOP", 0, -50)
     m.spendLabel:SetText("CAN SPEND")
     m.spend = text(m, 32)
     m.spend:SetPoint("TOP", 0, -74)
+    m.accountTotal = text(m, 14, 0.8, 0.86, 0.95)
+    m.accountTotal:SetPoint("TOP", 0, -114)
+    m.accountTotal:SetWidth(W - 48)
 
     m.owedLabel = text(m, 15, 0.93, 0.79, 0.47)
     m.owedLabel:SetPoint("TOP", -W / 4 + 10, -134)
-    m.owedLabel:SetText("PUT AWAY")
+    m.owedLabel:SetText(GG.IsShared() and "PUT AWAY (HERE)" or "PUT AWAY")
     m.owed = text(m, 24)
     m.owed:SetPoint("TOP", -W / 4 + 10, -155)
     m.storedLabel = text(m, 15, 0.7, 0.81, 0.95)
@@ -136,7 +139,7 @@ local function BuildMain(m)
     m.goalBtn = bottom("Goals", function() GG.Show("setup") end)
     m.listBtn = bottom("History", function() GG.listPage = 1; GG.Show("list") end)
     m.miniBtn = bottom("Overlay", function() GG.ToggleMini() end)
-    m.tipBtn = bottom("Tip", function() GG.tipStep = GG.tipStep + 1; GG.Refresh() end)
+    m.tipBtn = bottom("Characters", function() GG.Show("characters") end)
 end
 
 ------------------------------------------------------------ list view (every gain and every save)
@@ -222,6 +225,12 @@ local function BuildSetup(s)
             GG.Refresh()
         end)
         r.del:SetPoint("LEFT", r.plus, "RIGHT", 8, 0)
+        r.share = button(r, "Share", 64, 24, 12, function()
+            if not r.goal then return end
+            local ok, why = GG.ShareGoal(r.goal.id)
+            if not ok then s.msg:SetText(why) end
+        end)
+        r.share:SetPoint("LEFT", r.del, "RIGHT", 6, 0)
         s.rows[i] = r
     end
 
@@ -277,6 +286,105 @@ local function BuildSetup(s)
     s.back:SetPoint("BOTTOM", 0, 18)
 end
 
+-- All character balances are snapshots. Only the character being played is live.
+local CHARACTER_ROWS = 6
+local poolPreview
+local function BuildCharacters(p)
+    p.head = text(p, 20, 0.96, 0.86, 0.61)
+    p.head:SetPoint("TOP", 0, -36)
+    p.head:SetText("All your gold")
+    p.total = text(p, 28); p.total:SetPoint("TOP", 0, -66)
+    p.note = text(p, 14, 0.8, 0.85, 0.92)
+    p.note:SetPoint("TOP", 0, -102); p.note:SetWidth(W - 44)
+    p.note:SetText("Bags only. Alts show their last recorded balance.\nLog into each character once.")
+    p.rows = {}
+    for i = 1, CHARACTER_ROWS do
+        local r = {}
+        local y = -152 - (i - 1) * 44
+        r.name = text(p, 15, 0.96, 0.86, 0.61, "LEFT")
+        r.name:SetPoint("TOPLEFT", 24, y); r.name:SetWidth(245); r.name:SetWordWrap(false)
+        r.money = text(p, 16, 1, 1, 1, "RIGHT")
+        r.money:SetPoint("TOPRIGHT", -24, y)
+        r.seen = text(p, 12, 0.7, 0.8, 0.9, "LEFT")
+        r.seen:SetPoint("TOPLEFT", 24, y - 19); r.seen:SetWidth(W - 48)
+        p.rows[i] = r
+    end
+    p.page = text(p, 13, 0.8, 0.85, 0.92); p.page:SetPoint("TOP", 0, -434)
+    p.newer = button(p, "Back", 76, 24, 13, function()
+        GG.characterPage = max((GG.characterPage or 1) - 1, 1); GG.Refresh()
+    end)
+    p.newer:SetPoint("TOPLEFT", 24, -426)
+    p.older = button(p, "Next", 76, 24, 13, function()
+        GG.characterPage = (GG.characterPage or 1) + 1; GG.Refresh()
+    end)
+    p.older:SetPoint("TOPRIGHT", -24, -426)
+    p.use = button(p, "Use current gold for shared goals", 300, 28, 14, function()
+        if not GG.IsShared() then
+            GG.SetScope(true); GG.Show("characters")
+            p.msg:SetText("Shared goals selected. Click again to preview.")
+            return
+        end
+        poolPreview = GG.PoolPlan()
+        if #GG.db.goals == 0 then
+            p.msg:SetText("Add a shared goal first."); poolPreview = nil
+        elseif poolPreview.total == 0 then
+            p.msg:SetText("Nothing new to reserve."); poolPreview = nil
+        else
+            p.msg:SetText("Reserve " .. GG.Money(poolPreview.total) .. " from " .. poolPreview.characters ..
+                " character(s) on this realm?\nLast recorded balances. This is not stored yet.")
+        end
+        GG.Refresh()
+    end)
+    p.use:SetPoint("TOP", 0, -466)
+    p.msg = text(p, 14, 0.93, 0.79, 0.47)
+    p.msg:SetPoint("TOP", 0, -502); p.msg:SetWidth(W - 48)
+    p.confirm = button(p, "Reserve it", 130, 26, 14, function()
+        local ok, value = GG.ApplyPool(poolPreview)
+        poolPreview = nil
+        p.msg:SetText(ok and ("To put away increased by " .. GG.Money(value)) or value)
+        GG.Refresh()
+    end)
+    p.confirm:SetPoint("TOP", -72, -548)
+    p.cancel = button(p, "Cancel", 120, 26, 14, function()
+        poolPreview = nil; p.msg:SetText(""); GG.Refresh()
+    end)
+    p.cancel:SetPoint("TOP", 68, -548)
+    p.transfer = button(p, "Skip next own transfer", 222, 26, 14, function()
+        GG.SkipOwnTransfer()
+        p.msg:SetText("Collect your own transfer next. Normal tracking resumes after one gain.")
+    end)
+    p.transfer:SetPoint("BOTTOMLEFT", 24, 18)
+    p.done = button(p, "Done", 96, 26, 14, function() GG.Show("main") end)
+    p.done:SetPoint("BOTTOMRIGHT", -24, 18)
+end
+
+local function RefreshCharacters(p)
+    local rows, total = GG.CharacterRows()
+    p.total:SetText(GG.Money(total))
+    local pages = max(math.ceil(#rows / CHARACTER_ROWS), 1)
+    local page = min(GG.characterPage or 1, pages)
+    GG.characterPage = page
+    for i, r in ipairs(p.rows) do
+        local row = rows[(page - 1) * CHARACTER_ROWS + i]
+        if row then
+            r.name:SetText(row.name .. (row.realm ~= GG.characterRealm and (" - " .. row.realm) or ""))
+            r.money:SetText(GG.Money(row.money))
+            local due = row.personalOwed
+            local realm = GG.account.realms[row.realm]
+            if realm then due = due + GG.SourceOwed(realm.shared, row.key) end
+            local seen = row.key == GG.characterKey and "Playing now" or ("Last seen " .. date("%b %d  %I:%M %p", row.seen))
+            r.seen:SetText(seen .. (due > 0 and ("   Put away: " .. GG.Money(due)) or ""))
+        else
+            r.name:SetText(""); r.money:SetText(""); r.seen:SetText("")
+        end
+    end
+    p.page:SetText("Page " .. page .. " of " .. pages)
+    p.newer:SetShown(page > 1); p.older:SetShown(page < pages)
+    p.confirm:SetShown(poolPreview ~= nil); p.cancel:SetShown(poolPreview ~= nil)
+    F:SetHeight(660)
+end
+
+
 ------------------------------------------------------------ window
 function GG.BuildUI()
     if F then return end
@@ -319,15 +427,29 @@ function GG.BuildUI()
     close:SetPoint("TOPRIGHT", -6, -6)
     close:SetScript("OnClick", function() GG.Hide() end)
 
+    F.personalBtn = button(F, "This character", 132, 26, 14, function() GG.SetScope(false) end)
+    F.personalBtn:SetPoint("TOPLEFT", 18, -42)
+    F.sharedBtn = button(F, "Shared goals", 132, 26, 14, function() GG.SetScope(true) end)
+    F.sharedBtn:SetPoint("TOPLEFT", 160, -42)
+    F.charactersBtn = button(F, "Characters", 128, 26, 14, function() GG.Show("characters") end)
+    F.charactersBtn:SetPoint("TOPLEFT", 302, -42)
+
     F.main = CreateFrame("Frame", nil, F)
-    F.main:SetAllPoints()
+    F.main:SetPoint("TOPLEFT", F, "TOPLEFT", 0, -36)
+    F.main:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", 0, 0)
     BuildMain(F.main)
     F.setup = CreateFrame("Frame", nil, F)
-    F.setup:SetAllPoints()
+    F.setup:SetPoint("TOPLEFT", F, "TOPLEFT", 0, -36)
+    F.setup:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", 0, 0)
     BuildSetup(F.setup)
     F.list = CreateFrame("Frame", nil, F)
-    F.list:SetAllPoints()
+    F.list:SetPoint("TOPLEFT", F, "TOPLEFT", 0, -36)
+    F.list:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", 0, 0)
     BuildList(F.list)
+    F.characters = CreateFrame("Frame", nil, F)
+    F.characters:SetPoint("TOPLEFT", F, "TOPLEFT", 0, -36)
+    F.characters:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", 0, 0)
+    BuildCharacters(F.characters)
 
     local acc = 0
     F:SetScript("OnUpdate", function(_, el)
@@ -347,6 +469,8 @@ function GG.Show(view)
     F.main:SetShown(view == "main")
     F.setup:SetShown(view == "setup")
     F.list:SetShown(view == "list")
+    F.characters:SetShown(view == "characters")
+    if view ~= "characters" then poolPreview = nil end
     confirm.id = nil
     F.setup.msg:SetText("")
     F:Show()
@@ -368,6 +492,9 @@ end
 local function RefreshSetup(s)
     local goals = GG.db.goals
     if confirm.id and GetTime() - confirm.at > 5 then confirm.id = nil end
+    s.head:SetText(GG.IsShared() and "Shared goals" or "This character's goals")
+    s.countNote:SetText(GG.IsShared() and "Shared goals take cuts on every character. Existing gold is optional." or
+        "This mode saves to personal goals. Share a goal to combine progress.")
     s.none:SetShown(#goals == 0)
     for i, r in ipairs(s.rows) do
         local g = goals[i]
@@ -378,6 +505,7 @@ local function RefreshSetup(s)
             r.amt:SetText(GG.Money(g.amount) .. (GG.GoalStatus(g).done and "  |cff20ff20MET|r" or ""))
             r.pct:SetText(g.pct .. "%")
             r.del:SetText(confirm.id == g.id and "|cffff3030Sure?|r" or "Remove")
+            r.share:SetShown(not GG.IsShared())
         end
     end
     local _, class = GG.safe(UnitClass, "player")
@@ -386,7 +514,7 @@ local function RefreshSetup(s)
         b:SetText(p.name .. "  (" .. GG.Commas(GG.PresetGold(p)) .. "g)")
     end
     s.note:SetText("Each gain: " .. GG.TotalPct() .. "% saved (100% max)")
-    F:SetHeight(560)
+    F:SetHeight(596)
 end
 
 local function RefreshMain(m)
@@ -394,13 +522,16 @@ local function RefreshMain(m)
     local goals = db.goals
     local owed = GG.TotalOwed()
 
-    m.owedLabel:SetText("PUT AWAY")
+    m.owedLabel:SetText(GG.IsShared() and "PUT AWAY (HERE)" or "PUT AWAY")
     m.owed:SetText(GG.Money(owed))
+    m.storedLabel:SetText(GG.IsShared() and "STORED (SHARED)" or "STORED")
     m.stored:SetText(GG.Money(GG.TotalSaved()))
     m.saveBtn:SetShown(owed > 0)
     local spend = GG.CanSpend()
-    m.spendLabel:SetText(spend < 0 and "|cffff7777SHORT ON SAVINGS|r" or "CAN SPEND")
+    m.spendLabel:SetText(spend < 0 and "|cffff7777SHORT ON SAVINGS|r" or "CAN SPEND (HERE)")
     m.spend:SetText(GG.Money(math.abs(spend)))
+    local _, allGold = GG.CharacterRows()
+    m.accountTotal:SetText("All characters: " .. GG.Money(allGold))
 
     local now = GetTime()
     if GG.lastAt and now - GG.lastAt < 20 and (GG.lastPut or 0) > 0 then
@@ -427,7 +558,8 @@ local function RefreshMain(m)
             else
                 c.need:SetText("Still need: " .. GG.Money(st.need))
             end
-            c.owed:SetText(g.owed > 0 and ("Put away " .. GG.Money(g.owed)) or "")
+            local here = GG.MyGoalOwed(g)
+            c.owed:SetText(here > 0 and ("Put away " .. GG.Money(here)) or "")
         end
     end
 
@@ -436,7 +568,7 @@ local function RefreshMain(m)
     m.tips[1]:ClearAllPoints(); m.tips[1]:SetPoint("TOP", 0, y - 24)
     m.tips[1]:SetText(GG.Tips()[1] or "")
     m.tips[2]:SetText("")
-    F:SetHeight(-y + 92)
+    F:SetHeight(-y + 128)
 end
 
 local function RefreshList(l)
@@ -474,12 +606,15 @@ local function RefreshList(l)
     l.page:SetText(#log > ROWS and ("Page " .. page .. " of " .. pages) or "")
     l.newer:SetShown(page > 1)
     l.older:SetShown(page < pages)
-    F:SetHeight(480)
+    F:SetHeight(516)
 end
 
 function GG.Refresh()
     if not F or not F:IsShown() then return end
-    if F.view == "setup" then RefreshSetup(F.setup)
+    F.personalBtn:SetText(not GG.IsShared() and "|cff7bddacThis character|r" or "This character")
+    F.sharedBtn:SetText(GG.IsShared() and "|cff7bddacShared goals|r" or "Shared goals")
+    if F.view == "characters" then RefreshCharacters(F.characters)
+    elseif F.view == "setup" then RefreshSetup(F.setup)
     elseif F.view == "list" then RefreshList(F.list)
     else RefreshMain(F.main) end
 end

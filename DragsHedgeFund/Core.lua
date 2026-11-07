@@ -265,13 +265,13 @@ function GG.OnMoney(silent)
             local log = db.log
             local remaining = {}
             for id, c in pairs(parts) do remaining[id] = c end
-            log[#log + 1] = { t = time(), gain = gain, cut = total, parts = parts, remaining = remaining }
+            log[#log + 1] = { t = time(), gain = gain, cut = total, parts = parts, remaining = remaining, owner = GG.characterKey }
             GG.TrimLog()
         end
         GG.lastGain, GG.lastPut, GG.lastAt = gain, total, GetTime()
     end
     -- spent into the gold you still have to put away? warn once
-    local owed = GG.TotalOwed()
+    local owed = GG.ReservedHere and GG.ReservedHere() or GG.TotalOwed()
     if not GG.mailInFlight and isNum(db.lastMoney) and m < db.lastMoney and owed > 0 and m < owed and db.lastMoney >= owed then
         print("|cffffd700Hedge Fund:|r |cffff3030You spent into your savings! You are short " ..
             GG.Money(owed - m) .. ".|r")
@@ -285,7 +285,7 @@ end
 function GG.CanSpend()
     local m = safe(GetMoney)
     if not isNum(m) then m = GG.db.lastMoney or 0 end
-    return m - GG.TotalOwed(), m
+    return m - (GG.ReservedHere and GG.ReservedHere() or GG.TotalOwed()), m
 end
 
 -- "Can spend: 12g" in green, or "Spent into savings: 1g" in red
@@ -312,7 +312,7 @@ function GG.ConfirmSaved(amt, to, limits)
             savedParts[g.id], left = take, left - take
             local payment = take
             for _, e in ipairs(db.log) do
-                if e.remaining and payment > 0 then
+                if e.remaining and payment > 0 and (not GG.EntryIsMine or GG.EntryIsMine(e)) then
                     local used = min(e.remaining[g.id] or 0, payment)
                     e.remaining[g.id] = (e.remaining[g.id] or 0) - used
                     payment = payment - used
@@ -327,7 +327,7 @@ function GG.ConfirmSaved(amt, to, limits)
     end
     local actual = amt - left
     if actual <= 0 then return end
-    db.log[#db.log + 1] = { t = time(), saved = actual, to = to, parts = savedParts }
+    db.log[#db.log + 1] = { t = time(), saved = actual, to = to, parts = savedParts, owner = GG.characterKey }
     GG.TrimLog()
     print("|cffffd700Hedge Fund:|r saved " .. GG.Money(actual) ..
         (to and (" (mailed to " .. to .. ")") or "") .. ". Total saved: " .. GG.Money(GG.TotalSaved()))
@@ -354,7 +354,7 @@ end
 -- How many gains are waiting to be put away.
 function GG.OwedCount()
     local n = 0
-    for _, e in ipairs(GG.db.log) do if e.cut and not e.done then n = n + 1 end end
+    for _, e in ipairs(GG.db.log) do if e.cut and not e.done and (not GG.EntryIsMine or GG.EntryIsMine(e)) then n = n + 1 end end
     return n
 end
 
@@ -476,6 +476,14 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
         local c = floor(num * COPPER_PER_GOLD)
         goal.saved = max(cmd == "add" and (goal.saved + c) or c, 0)
         print("|cffffd700Hedge Fund:|r " .. goal.name .. ": saved is now " .. GG.Money(goal.saved))
+    elseif cmd == "characters" or cmd == "chars" then
+        GG.Show("characters")
+    elseif cmd == "shared" then
+        GG.SetScope(true)
+    elseif cmd == "personal" then
+        GG.SetScope(false)
+    elseif cmd == "transfer" then
+        GG.SkipOwnTransfer()
     elseif cmd == "mini" or cmd == "overlay" then
         if GG.ToggleMini then GG.ToggleMini() end
     elseif cmd == "lock" then

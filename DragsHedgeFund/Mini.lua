@@ -141,14 +141,14 @@ function GG.RefreshMini()
     end
 
     local spend = GG.CanSpend()
-    M.spendLabel:SetText(spend < 0 and "|cffff7777SHORT ON SAVINGS|r" or "CAN SPEND")
+    M.spendLabel:SetText(spend < 0 and "|cffff7777SHORT ON SAVINGS|r" or "CAN SPEND (HERE)")
     M.spend:SetText(GG.Money(math.abs(spend)))
 
     local now = GetTime()
     if GG.lastAt and now - GG.lastAt < 20 and (GG.lastPut or 0) > 0 then
         M.line:SetText("|cff20ff20+|r" .. GG.Money(GG.lastGain) .. "  |cffffd100put away|r " .. GG.Money(GG.lastPut))
     else
-        M.line:SetText("|cffffd100Total saved|r " .. GG.MoneyShort(GG.TotalSaved()))
+        M.line:SetText((GG.IsShared() and "|cffffd100Shared stored|r " or "|cffffd100Stored|r ") .. GG.MoneyShort(GG.TotalSaved()))
     end
 
     M.none:SetShown(#goals == 0)
