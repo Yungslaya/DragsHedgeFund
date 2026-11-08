@@ -4,6 +4,12 @@ Gold savings helper for WoW: Forever (Interface 16001).
 
 **What's new in 1.4.0:** gold totals across characters, shared goals, and an optional one-time contribution from existing gold.
 
+## Starter setup (starter setup)
+
+Start with `/gg` and add your own goal and savings percentage. No goals or saved gold are invented. The locked overlay appears after you add a goal and hides in combat. Overlay tips and sounds start off. Shared goals and other-character tools are available when you choose them.
+
+Open Options to enable extras. `/gg starter` applies starter display options; `/gg restore` restores your previous choices. These presets never change goals, percentages, stored savings, pending amounts, transaction history or personal/shared scope. Existing users keep their choices.
+
 ## Start here
 
 1. Fully restart WoW after installing this update. The new account-wide saved data needs a restart.

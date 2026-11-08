@@ -127,7 +127,10 @@ function GG.ToggleMini(on)
 end
 
 function GG.RefreshMini()
-    if not M or not M:IsShown() then return end
+    if not M then return end
+    local combat=GG.safe(InCombatLockdown)==true
+    M:SetShown(GG.db.mini and #GG.db.goals>0 and not (GG.db.miniHideCombat and combat) and true or false)
+    if not M:IsShown() then return end
     local db = GG.db
     local goals = db.goals
 

@@ -431,7 +431,7 @@ function GG.BuildUI()
     F.personalBtn:SetPoint("TOPLEFT", 18, -42)
     F.sharedBtn = button(F, "Shared goals", 132, 26, 14, function() GG.SetScope(true) end)
     F.sharedBtn:SetPoint("TOPLEFT", 160, -42)
-    F.charactersBtn = button(F, "Characters", 128, 26, 14, function() GG.Show("characters") end)
+    F.charactersBtn = button(F, "Options", 128, 26, 14, function() GG.Show("options") end)
     F.charactersBtn:SetPoint("TOPLEFT", 302, -42)
 
     F.main = CreateFrame("Frame", nil, F)
@@ -450,6 +450,22 @@ function GG.BuildUI()
     F.characters:SetPoint("TOPLEFT", F, "TOPLEFT", 0, -36)
     F.characters:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", 0, 0)
     BuildCharacters(F.characters)
+
+    F.options=CreateFrame("Frame",nil,F);F.options:SetAllPoints(F.main)
+    F.optionChecks={}
+    for i,entry in ipairs({{"mini","Show savings overlay"},{"miniHideCombat","Hide overlay in combat"},
+        {"miniLock","Lock overlay position"},{"miniTips","Show gold-making tips on overlay"},{"sound","Play savings warning and goal sounds"}}) do
+        local key,label=unpack(entry)
+        local c=CreateFrame("CheckButton",nil,F.options,"UICheckButtonTemplate")
+        c:SetPoint("TOPLEFT",24,-54-(i-1)*42)
+        local t=text(c,15);t:SetPoint("LEFT",c,"RIGHT",3,0);t:SetText(label)
+        c:SetScript("OnClick",function(self) GG.db[key]=self:GetChecked() and true or false;GG.Refresh() end)
+        F.optionChecks[key]=c
+    end
+    local starter=button(F.options,"Use starter setup",185,28,14,function() GG.StarterSetup() end)
+    starter:SetPoint("TOPLEFT",30,-280)
+    local restore=button(F.options,"Restore my setup",185,28,14,function() GG.StarterSetup(true) end)
+    restore:SetPoint("LEFT",starter,"RIGHT",12,0)
 
     local acc = 0
     F:SetScript("OnUpdate", function(_, el)
@@ -470,6 +486,7 @@ function GG.Show(view)
     F.setup:SetShown(view == "setup")
     F.list:SetShown(view == "list")
     F.characters:SetShown(view == "characters")
+    F.options:SetShown(view == "options")
     if view ~= "characters" then poolPreview = nil end
     confirm.id = nil
     F.setup.msg:SetText("")
@@ -613,7 +630,10 @@ function GG.Refresh()
     if not F or not F:IsShown() then return end
     F.personalBtn:SetText(not GG.IsShared() and "|cff7bddacThis character|r" or "This character")
     F.sharedBtn:SetText(GG.IsShared() and "|cff7bddacShared goals|r" or "Shared goals")
-    if F.view == "characters" then RefreshCharacters(F.characters)
+    if F.view == "options" then
+        for key,c in pairs(F.optionChecks) do c:SetChecked(GG.db[key] and true or false) end
+        F:SetHeight(420)
+    elseif F.view == "characters" then RefreshCharacters(F.characters)
     elseif F.view == "setup" then RefreshSetup(F.setup)
     elseif F.view == "list" then RefreshList(F.list)
     else RefreshMain(F.main) end

@@ -134,6 +134,7 @@ GG.MAX_GOALS = 5
 function GG.InitDB()
     DragsHedgeFundDB = DragsHedgeFundDB or {}
     local db = DragsHedgeFundDB
+    local fresh=next(db)==nil
     if not isNum(db.pct) then db.pct = 20 end          -- % for new goals
     -- version 2: only confirmed cuts from new gains count. Start clean.
     if (db.version or 1) < 2 then
@@ -162,7 +163,11 @@ function GG.InitDB()
     db.nextId = db.nextId or (#db.goals + 1)
     db.log = db.log or {}
     if db.mini == nil then db.mini = true end
-    if db.shown == nil then db.shown = true end
+    if db.shown == nil then db.shown = not fresh end
+    if db.miniLock == nil then db.miniLock = fresh end
+    if db.miniTips == nil then db.miniTips = not fresh end
+    if db.miniHideCombat == nil then db.miniHideCombat = fresh end
+    if db.sound == nil then db.sound = not fresh end
     GG.db = db
     local available, adjusted = 100, false
     for _, g in ipairs(db.goals) do
@@ -175,6 +180,22 @@ function GG.InitDB()
         print("|cffffd700Hedge Fund:|r goal percentages were reduced to keep the total at 100% or less.")
     end
     GG.RepairLedger()
+end
+
+-- Display presets never change goals, ledgers, scope or percentages.
+function GG.StarterSetup(restore)
+    local keys={mini=true,miniLock=true,miniTips=false,miniHideCombat=true,sound=false}
+    if restore then
+        if not GG.db.starterBackup then return false end
+        for key,value in pairs(GG.db.starterBackup) do GG.db[key]=value.value end
+        GG.db.starterBackup=nil
+    else
+        local old={}
+        for key,value in pairs(keys) do old[key]={value=GG.db[key]};GG.db[key]=value end
+        GG.db.starterBackup=GG.db.starterBackup or old
+    end
+    if GG.Refresh then GG.Refresh() end
+    return true
 end
 
 ------------------------------------------------------------ goals
@@ -275,7 +296,7 @@ function GG.OnMoney(silent)
     if not GG.mailInFlight and isNum(db.lastMoney) and m < db.lastMoney and owed > 0 and m < owed and db.lastMoney >= owed then
         print("|cffffd700Hedge Fund:|r |cffff3030You spent into your savings! You are short " ..
             GG.Money(owed - m) .. ".|r")
-        if PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.RAID_WARNING or 8959) end
+        if GG.db.sound and PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.RAID_WARNING or 8959) end
     end
     db.lastMoney = m
 end
@@ -321,7 +342,7 @@ function GG.ConfirmSaved(amt, to, limits)
             end
             if g.saved >= g.amount and not g.metSound then
                 g.metSound = true
-                if PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.LEVEL_UP or 888) end
+                if GG.db.sound and PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.LEVEL_UP or 888) end
             end
         end
     end
@@ -432,6 +453,8 @@ local ev = CreateFrame("Frame")
 ev:RegisterEvent("PLAYER_LOGIN")
 ev:RegisterEvent("PLAYER_ENTERING_WORLD")
 ev:RegisterEvent("PLAYER_MONEY")
+ev:RegisterEvent("PLAYER_REGEN_ENABLED")
+ev:RegisterEvent("PLAYER_REGEN_DISABLED")
 ev:RegisterEvent("BAG_UPDATE_DELAYED")
 ev:RegisterEvent("SKILL_LINES_CHANGED")
 ev:SetScript("OnEvent", function(_, e)
@@ -464,6 +487,8 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
     local db = GG.db
     if cmd == "" then
         GG.Toggle()
+    elseif cmd == "starter" or cmd == "restore" then
+        GG.StarterSetup(cmd=="restore")
     elseif cmd == "goal" then
         GG.Show("setup")
     elseif cmd == "pct" and num then
