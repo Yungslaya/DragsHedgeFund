@@ -111,7 +111,7 @@ FIRE("PLAYER_LOGIN"); local G=DragsHedgeFund
 G.AddGoal("Mount",200,20); G.AddGoal("Bags",40,10)
 MONEY=MONEY+10000; FIRE("PLAYER_MONEY")
 FIRE("MAIL_SHOW"); local P=DragsHedgeFundMail; P.name._text="Bankalt"
-G.FillMail(); assert(SendMailMoney._copper==3000)
+G.FillMail(); assert(SendMailMoney._copper==2970)
 SendMailCODButton._checked=true
 SendMailMailButton._PreClick(); FIRE("MAIL_SEND_SUCCESS")
 assert(G.TotalSaved()==0 and G.TotalOwed()==3000,"COD is not sent savings")
@@ -164,7 +164,7 @@ G.FillMail(); SendMailMailButton._PreClick()
 local n=#LOG; MONEY=0; FIRE("PLAYER_MONEY")
 for i=n+1,#LOG do assert(not LOG[i]:find("You spent into"),LOG[i]) end
 FIRE("MAIL_SEND_SUCCESS")
-assert(G.TotalSaved()==10000 and G.TotalOwed()==0)
+assert(G.TotalSaved()==9970 and G.TotalOwed()==30)
 '''
 cases["allocation remains bounded across changing goals"]=r'''
 FIRE("PLAYER_LOGIN"); local G=DragsHedgeFund
@@ -338,9 +338,9 @@ SwitchCharacter("Bob",400000)
 MONEY=MONEY+100000; FIRE("PLAYER_MONEY")
 FIRE("MAIL_SHOW"); DragsHedgeFundMail.name._text="Bankalt"
 G.FillMail()
-assert(SendMailMoney._copper==20000,"Mail included Alice's contribution")
+assert(SendMailMoney._copper==19970,"Mail included Alice's contribution")
 SendMailMailButton._PreClick(); FIRE("MAIL_SEND_SUCCESS")
-assert(G.TotalSaved()==20000 and G.db.goals[1].owed==10000 and G.TotalOwed()==0)
+assert(G.TotalSaved()==19970 and G.db.goals[1].owed==10030 and G.TotalOwed()==30)
 SwitchCharacter("Alice",650000)
 assert(G.TotalOwed()==10000)
 '''
@@ -386,6 +386,21 @@ assert(G.IsShared() and G.db.goals[1].name=="Shared mount")
 SwitchCharacter("Bob",400000)
 assert(not G.IsShared() and G.db.goals[1].name=="Private bags")
 '''
+
+cases["mail deducts postage once and note matches net savings"]=r"""
+FIRE("PLAYER_LOGIN");local G=DragsHedgeFund
+G.AddGoal("Mount",200,100)
+MONEY=MONEY+10000;FIRE("PLAYER_MONEY")
+FIRE("MAIL_SHOW");DragsHedgeFundMail.name._text="Bankalt"
+G.FillMail()
+assert(SendMailMoney._copper==9970,"postage not deducted from mailing budget")
+assert(SendMailBodyEditBox._text:find("Gold mailed: "..G.MoneyPlain(9970),1,true),"mail amount wrong")
+assert(SendMailBodyEditBox._text:find("Postage: "..G.MoneyPlain(30),1,true),"postage missing")
+assert(SendMailBodyEditBox._text:find("saved "..G.MoneyPlain(9970),1,true),"goal total includes postage")
+SendMailMailButton._PreClick();FIRE("MAIL_SEND_SUCCESS")
+assert(G.TotalSaved()==9970 and G.TotalOwed()==30,"postage counted as savings or deducted twice")
+G.FillMail();assert(not G.mailInFlight,"postage-only remainder should not mail")
+"""
 
 failures=0
 for name,body in cases.items():

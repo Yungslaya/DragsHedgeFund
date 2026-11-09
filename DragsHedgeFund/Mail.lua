@@ -4,6 +4,7 @@ local _, GG = ...
 -- It only fills the boxes. YOU press Blizzard's Send button.
 local FONT = "Fonts\\FRIZQT__.TTF"
 local min = math.min
+local POSTAGE = 30
 local P            -- the panel next to the mail window
 local pending      -- what we filled in: { to, amount }
 local sending      -- snapshot taken when Send was pressed
@@ -30,6 +31,28 @@ local function sendMoneyNow()
     return 0
 end
 
+local function mailNote(credit, mailed, limits)
+    local lines,names,left={},{},credit
+    for _,g in ipairs(GG.db.goals) do
+        local owed=GG.MyGoalOwed and GG.MyGoalOwed(g) or g.owed
+        local part=min(owed,left,limits and (limits[g.id] or 0) or owed)
+        if part>0 then
+            names[#names+1]=g.name
+            lines[#lines+1]="- "..g.name..": "..GG.MoneyPlain(part)..
+                " (saved "..GG.MoneyPlain(g.saved+part).." of "..GG.MoneyPlain(g.amount)..")"
+            left=left-part
+        end
+    end
+    local subject=#names==1 and ("Savings: "..names[1]) or ("Savings: "..#names.." goals")
+    local body="Savings sent: "..date("%b %d, %Y")..
+        "\nGold mailed: "..GG.MoneyPlain(mailed)..
+        "\nSaved toward goals: "..GG.MoneyPlain(credit-left)..
+        "\nPostage: "..GG.MoneyPlain(POSTAGE).." (not saved)"..
+        "\nTotal spent: "..GG.MoneyPlain(mailed+POSTAGE)..
+        "\n"..table.concat(lines,"\n")
+    return subject,body:sub(1,480)
+end
+
 function GG.FillMail()
     pending, sending, GG.mailInFlight = nil, nil, nil
     local db = GG.db
@@ -39,10 +62,12 @@ function GG.FillMail()
     if type(me) == "string" and to:lower() == me:lower() then
         P.msg:SetText("|cffff3030You can't mail yourself.|r") return
     end
-    local amt = GG.TotalOwed()
-    if amt <= 0 then P.msg:SetText("Nothing to put away.") return end
+    local budget = GG.TotalOwed()
+    if budget <= 0 then P.msg:SetText("Nothing to put away.") return end
+    local amt = budget - POSTAGE
+    if amt <= 0 then P.msg:SetText("Save more than 30 copper before mailing.") return end
     local money = GG.safe(GetMoney) or 0
-    if GG.isNum(money) and amt + 30 > money then   -- 30c postage
+    if GG.isNum(money) and amt + POSTAGE > money then   -- postage comes from the set-aside budget
         P.msg:SetText("|cffff3030Not enough gold in your bags.|r") return
     end
     db.mailTo = to
@@ -54,21 +79,7 @@ function GG.FillMail()
         pcall(MailFrameTab2.Click, MailFrameTab2)
     end
 
-    -- one line per goal that has gold waiting
-    local lines, names = {}, {}
-    for _, g in ipairs(db.goals) do
-        local owed = GG.MyGoalOwed and GG.MyGoalOwed(g) or g.owed
-        if owed > 0 then
-            names[#names + 1] = g.name
-            lines[#lines + 1] = "- " .. g.name .. ": " .. GG.MoneyPlain(owed) ..
-                " (saved " .. GG.MoneyPlain(g.saved + owed) .. " of " .. GG.MoneyPlain(g.amount) .. ")"
-        end
-    end
-    local subject = #names == 1 and ("Savings: " .. names[1]) or ("Savings: " .. #names .. " goals")
-    local body = "Savings sent: " .. date("%b %d, %Y") ..
-        "\nAmount: " .. GG.MoneyPlain(amt) ..
-        "\n" .. table.concat(lines, "\n")
-    if #body > 480 then body = body:sub(1, 480) end
+    local subject,body=mailNote(amt,amt)
 
     if SendMailNameEditBox then SendMailNameEditBox:SetText(to) end
     if SendMailSubjectEditBox then SendMailSubjectEditBox:SetText(subject) end
@@ -167,6 +178,11 @@ local function OnSendPressed()
         end
     end
     sending = { to = trim(to), money = sendMoneyNow(), limits = limits }
+    if sending.money>0 then
+        local subject,body=mailNote(min(sending.money,pending.amount),sending.money,limits)
+        if SendMailSubjectEditBox then SendMailSubjectEditBox:SetText(subject) end
+        if SendMailBodyEditBox then SendMailBodyEditBox:SetText(body) end
+    end
     GG.mailInFlight = sending.money > 0
 end
 
