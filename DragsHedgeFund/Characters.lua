@@ -150,7 +150,7 @@ function GG.TotalOwed()
     return totalOwed()
 end
 
-function GG.ConfirmSaved(amt, to, limits)
+function GG.ConfirmSaved(amt, to, limits, postage)
     if GG.IsShared() then
         local capped = {}
         for _, g in ipairs(GG.db.goals) do
@@ -158,7 +158,7 @@ function GG.ConfirmSaved(amt, to, limits)
         end
         limits = capped
     end
-    local actual = confirmSaved(amt, to, limits)
+    local actual = confirmSaved(amt, to, limits, postage)
     GG.RecordWallet()
     return actual
 end

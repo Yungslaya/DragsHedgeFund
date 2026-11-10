@@ -125,13 +125,13 @@ SendMailMailButton._PreClick()
 -- Simulate Blizzard clearing the form immediately after Send.
 SendMailNameEditBox._text=""; SendMailMoney._copper=0
 FIRE("MAIL_SEND_SUCCESS")
-assert(G.TotalSaved()==500 and G.TotalOwed()==2500)
+assert(G.TotalSaved()==500 and G.TotalOwed()==2470)
 FIRE("MAIL_SEND_SUCCESS"); assert(G.TotalSaved()==500,"No double credit")
 G.FillMail()
 G.ConfirmSaved()
 MONEY=MONEY+10000; FIRE("PLAYER_MONEY")
 SendMailMailButton._PreClick(); FIRE("MAIL_SEND_SUCCESS")
-assert(G.TotalSaved()==3000 and G.TotalOwed()==3000,"Old draft must not credit newer cuts")
+assert(G.TotalSaved()==2970 and G.TotalOwed()==3000,"Old draft must not credit newer cuts")
 """,
 "UI, overlay, mail panel load with secret combat values":r"""
 FIRE("PLAYER_LOGIN"); local G=DragsHedgeFund
@@ -164,7 +164,7 @@ G.FillMail(); SendMailMailButton._PreClick()
 local n=#LOG; MONEY=0; FIRE("PLAYER_MONEY")
 for i=n+1,#LOG do assert(not LOG[i]:find("You spent into"),LOG[i]) end
 FIRE("MAIL_SEND_SUCCESS")
-assert(G.TotalSaved()==9970 and G.TotalOwed()==30)
+assert(G.TotalSaved()==9970 and G.TotalOwed()==0)
 '''
 cases["allocation remains bounded across changing goals"]=r'''
 FIRE("PLAYER_LOGIN"); local G=DragsHedgeFund
@@ -340,7 +340,7 @@ FIRE("MAIL_SHOW"); DragsHedgeFundMail.name._text="Bankalt"
 G.FillMail()
 assert(SendMailMoney._copper==19970,"Mail included Alice's contribution")
 SendMailMailButton._PreClick(); FIRE("MAIL_SEND_SUCCESS")
-assert(G.TotalSaved()==19970 and G.db.goals[1].owed==10030 and G.TotalOwed()==30)
+assert(G.TotalSaved()==19970 and G.db.goals[1].owed==10000 and G.TotalOwed()==0)
 SwitchCharacter("Alice",650000)
 assert(G.TotalOwed()==10000)
 '''
@@ -398,7 +398,7 @@ assert(SendMailBodyEditBox._text:find("Gold mailed: "..G.MoneyPlain(9970),1,true
 assert(SendMailBodyEditBox._text:find("Postage: "..G.MoneyPlain(30),1,true),"postage missing")
 assert(SendMailBodyEditBox._text:find("saved "..G.MoneyPlain(9970),1,true),"goal total includes postage")
 SendMailMailButton._PreClick();FIRE("MAIL_SEND_SUCCESS")
-assert(G.TotalSaved()==9970 and G.TotalOwed()==30,"postage counted as savings or deducted twice")
+assert(G.TotalSaved()==9970 and G.TotalOwed()==0,"postage counted as savings or deducted twice")
 G.FillMail();assert(not G.mailInFlight,"postage-only remainder should not mail")
 """
 

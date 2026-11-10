@@ -56,6 +56,12 @@ function GG.TotalPct(except)
     return total
 end
 
+function GG.SetSavedCopper(goal, amount)
+    if not goal or not isNum(amount) or amount < 0 or amount ~= floor(amount) then return false end
+    goal.saved = amount
+    return true
+end
+
 function GG.SetGoalPct(g, pct)
     g.pct = min(max(floor(pct), 0), 100 - GG.TotalPct(g))
 end
@@ -319,19 +325,23 @@ end
 
 -- You moved the gold somewhere safe (bank alt, mail...). Count it as saved.
 -- amt: how much (default all of it). to: who it was mailed to, if mailed.
-function GG.ConfirmSaved(amt, to, limits)
+function GG.ConfirmSaved(amt, to, limits, postage)
     local db = GG.db
     local owed = GG.TotalOwed()
     if owed <= 0 or (amt ~= nil and not isNum(amt)) then return end
     amt = floor(min(amt or owed, owed))
     if amt <= 0 then return end
     local left, savedParts = amt, {}
+    local feeLeft = postage or 0
     for _, g in ipairs(db.goals) do
-        local take = min(g.owed, left, limits and (limits[g.id] or 0) or g.owed)
-        if take > 0 then
-            g.owed, g.saved = g.owed - take, g.saved + take
-            savedParts[g.id], left = take, left - take
-            local payment = take
+        local available = min(g.owed, limits and (limits[g.id] or 0) or g.owed)
+        local take = min(available, left)
+        local fee = min(available - take, feeLeft)
+        if take + fee > 0 then
+            g.owed, g.saved = g.owed - take - fee, g.saved + take
+            if take > 0 then savedParts[g.id] = take end
+            left, feeLeft = left - take, feeLeft - fee
+            local payment = take + fee
             for _, e in ipairs(db.log) do
                 if e.remaining and payment > 0 and (not GG.EntryIsMine or GG.EntryIsMine(e)) then
                     local used = min(e.remaining[g.id] or 0, payment)

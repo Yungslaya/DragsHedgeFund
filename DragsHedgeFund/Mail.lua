@@ -207,7 +207,7 @@ ev:SetScript("OnEvent", function(_, e)
         pending, sending, GG.mailInFlight = nil, nil, nil
         if s and p and p.ledger == GG.db.goals and s.to:lower() == p.to:lower() and s.money > 0 then
             pending = nil
-            local saved = GG.ConfirmSaved(min(s.money, p.amount), p.to, s.limits)
+            local saved = GG.ConfirmSaved(min(s.money, p.amount), p.to, s.limits, POSTAGE)
             if P then P.msg:SetText(saved and "|cff20ff20Sent and saved!|r" or "Nothing left to mark saved.") end
             if GG.Refresh then GG.Refresh() end
         end
