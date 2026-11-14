@@ -17,6 +17,7 @@ local function newObj()
         if k == "Hide" then return function(self) self._shown = false end end
         if k == "SetShown" then return function(self, v) self._shown = v and true or false end end
         if k == "IsShown" then return function(self) return self._shown end end
+        if k == "IsVisible" then return function(self) return self._shown end end
         if k == "SetScript" then return function(self, n, f) self["_" .. n] = f end end
         if k == "GetPoint" then return function() return "CENTER", nil, "CENTER", 5, 6 end end
         if k == "SetHeight" then return function(self, h) assert(type(h) == "number", "SetHeight bad"); self._h = h end end

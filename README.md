@@ -2,6 +2,8 @@
 
 Gold savings helper for WoW: Forever (Interface 16001).
 
+**What's new in 1.4.4:** the mailbox panel now works when another addon such as TradeSkillMaster replaces the mail window. It stands on its own, has its own Send mail button, and closes when you leave the mailbox.
+
 **What's new in 1.4.0:** gold totals across characters, shared goals, and an optional one-time contribution from existing gold.
 
 ## Starter setup (starter setup)

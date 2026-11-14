@@ -133,6 +133,55 @@ MONEY=MONEY+10000; FIRE("PLAYER_MONEY")
 SendMailMailButton._PreClick(); FIRE("MAIL_SEND_SUCCESS")
 assert(G.TotalSaved()==2970 and G.TotalOwed()==3000,"Old draft must not credit newer cuts")
 """,
+"mail works when another addon (TSM) replaces the mail window":r"""
+FIRE("PLAYER_LOGIN"); local G=DragsHedgeFund
+G.AddGoal("Mount",200,20)
+MONEY=MONEY+10000; FIRE("PLAYER_MONEY")
+local sent, attached = {}, nil
+SetSendMailMoney=function(c) attached=c end
+SetSendMailCOD=function() end
+SendMail=function(to,subject,body) sent[#sent+1]={to=to,subject=subject,body=body,money=attached} end
+-- Blizzard's window showing: the panel sits beside it, no Send button of its own
+FIRE("MAIL_SHOW"); local P=DragsHedgeFundMail; P.name._text="Bankalt"
+assert(P:IsShown() and not P.send:IsShown(),"own Send button hidden beside Blizzard's window")
+G.FillMail(); assert(TAB==2 and not P.send:IsShown() and P.msg._text:find("Now press Send.",1,true))
+FIRE("MAIL_CLOSED"); assert(not P:IsShown(),"panel closes with the mailbox")
+-- TSM hides Blizzard's window: the panel stands alone and sends with its own button
+MailFrame._shown=false; TAB=nil
+FIRE("MAIL_SHOW"); P.name._text="Bankalt"
+assert(P:IsShown() and P.fill:IsShown() and not P.send:IsShown())
+P.send._OnClick(); assert(#sent==0,"nothing to send before the mail is filled")
+G.FillMail()
+assert(TAB==nil,"does not poke the hidden window's tabs")
+assert(P.send:IsShown() and not P.fill:IsShown() and P.msg._text:find("Now press Send mail.",1,true))
+P.send._OnClick()
+assert(#sent==1 and sent[1].to=="Bankalt" and sent[1].money==1970 and sent[1].subject=="Savings: Mount",sent[1] and sent[1].money)
+assert(sent[1].body:find("Gold mailed",1,true) and G.TotalSaved()==0,"not counted until the game confirms")
+FIRE("MAIL_SEND_SUCCESS")
+assert(G.TotalSaved()==1970 and G.TotalOwed()==0 and not P.send:IsShown(),"saved once the mail went out")
+P.send._OnClick(); assert(#sent==1,"no second mail")
+-- a failed send can be tried again
+MONEY=MONEY+10000; FIRE("PLAYER_MONEY")
+G.FillMail(); P.send._OnClick(); FIRE("MAIL_FAILED")
+assert(#sent==2 and G.TotalSaved()==1970 and P.send:IsShown() and P.msg._text:find("Mail failed",1,true))
+P.send._OnClick(); FIRE("MAIL_SEND_SUCCESS"); assert(#sent==3 and G.TotalSaved()==1970+1970)
+-- walking away from the mailbox: TSM's window closes and the game's "mail closed" message never comes.
+-- The panel must still go away by itself, and must not vanish while TSM's window is only slow to open.
+MailFrame._shown=false; FIRE("MAIL_SHOW"); assert(P:IsShown())
+TSM_API={IsUIVisible=function(ui) assert(ui=="MAILING"); return TSM_MAIL end}
+TSM_MAIL=true; TICK(); TICK(); assert(P:IsShown(),"stays while TSM's mail window is open")
+TSM_MAIL=false; P._OnUpdate(P,0.4); assert(P:IsShown(),"a short gap does not close it")
+TSM_MAIL=true; P._OnUpdate(P,0.4); TSM_MAIL=false; P._OnUpdate(P,0.4); assert(P:IsShown(),"the wait starts over")
+P._OnUpdate(P,0.4); P._OnUpdate(P,0.4); assert(not P:IsShown(),"closes about a second after the mail window is gone")
+-- the game itself can say the mailbox is still open (TSM's window hidden for a moment)
+C_PlayerInteractionManager={IsInteractingWithNpcOfType=function(kind) assert(kind==17); return AT_MAILBOX end}
+Enum={PlayerInteractionType={MailInfo=17}}
+AT_MAILBOX=true; FIRE("MAIL_SHOW"); TICK(); TICK(); assert(P:IsShown(),"still at the mailbox")
+AT_MAILBOX=false; TICK(); assert(not P:IsShown(),"left the mailbox")
+TSM_API=nil; C_PlayerInteractionManager=nil; Enum=nil
+FIRE("MAIL_SHOW")-- switching back to Blizzard's window while the mailbox is open puts the panel back beside it
+MailFrame._shown=true; TICK(); assert(not P.send:IsShown())
+""",
 "UI, overlay, mail panel load with secret combat values":r"""
 FIRE("PLAYER_LOGIN"); local G=DragsHedgeFund
 for i=1,5 do assert(G.AddGoal("Goal "..i,100,i*5)) end
