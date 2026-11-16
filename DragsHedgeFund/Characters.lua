@@ -131,7 +131,7 @@ function GG.OnMoney(silent)
         onMoney(true)
         GG.personal.skipNextGain = nil
         GG.lastAt = nil
-        print("|cffffd700Hedge Fund:|r own transfer skipped. Normal tracking is back on.")
+        print("|cffffd700Savings Pal:|r own transfer skipped. Normal tracking is back on.")
     else
         if skip and skip < time() then GG.personal.skipNextGain = nil end
         onMoney(silent)
@@ -141,7 +141,7 @@ end
 
 function GG.SkipOwnTransfer()
     GG.personal.skipNextGain = time() + 1800
-    print("|cffffd700Hedge Fund:|r the next gold gain will be ignored. Collect your own transfer now.")
+    print("|cffffd700Savings Pal:|r the next gold gain will be ignored. Collect your own transfer now.")
 end
 
 local totalOwed, confirmSaved, removeGoal = GG.TotalOwed, GG.ConfirmSaved, GG.RemoveGoal

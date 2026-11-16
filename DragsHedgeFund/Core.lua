@@ -183,7 +183,7 @@ function GG.InitDB()
         available = available - g.pct
     end
     if adjusted then
-        print("|cffffd700Hedge Fund:|r goal percentages were reduced to keep the total at 100% or less.")
+        print("|cffffd700Savings Pal:|r goal percentages were reduced to keep the total at 100% or less.")
     end
     GG.RepairLedger()
 end
@@ -300,7 +300,7 @@ function GG.OnMoney(silent)
     -- spent into the gold you still have to put away? warn once
     local owed = GG.ReservedHere and GG.ReservedHere() or GG.TotalOwed()
     if not GG.mailInFlight and isNum(db.lastMoney) and m < db.lastMoney and owed > 0 and m < owed and db.lastMoney >= owed then
-        print("|cffffd700Hedge Fund:|r |cffff3030You spent into your savings! You are short " ..
+        print("|cffffd700Savings Pal:|r |cffff3030You spent into your savings! You are short " ..
             GG.Money(owed - m) .. ".|r")
         if GG.db.sound and PlaySound and SOUNDKIT then safe(PlaySound, SOUNDKIT.RAID_WARNING or 8959) end
     end
@@ -360,7 +360,7 @@ function GG.ConfirmSaved(amt, to, limits, postage)
     if actual <= 0 then return end
     db.log[#db.log + 1] = { t = time(), saved = actual, to = to, parts = savedParts, owner = GG.characterKey }
     GG.TrimLog()
-    print("|cffffd700Hedge Fund:|r saved " .. GG.Money(actual) ..
+    print("|cffffd700Savings Pal:|r saved " .. GG.Money(actual) ..
         (to and (" (mailed to " .. to .. ")") or "") .. ". Total saved: " .. GG.Money(GG.TotalSaved()))
     return actual
 end
@@ -487,7 +487,7 @@ ev:SetScript("OnEvent", function(_, e)
 end)
 
 ------------------------------------------------------------ slash
-SLASH_DRAGSHEDGEFUND1, SLASH_DRAGSHEDGEFUND2, SLASH_DRAGSHEDGEFUND3 = "/gg", "/hedge", "/dhf"
+SLASH_DRAGSHEDGEFUND1, SLASH_DRAGSHEDGEFUND2, SLASH_DRAGSHEDGEFUND3, SLASH_DRAGSHEDGEFUND4 = "/gg", "/hedge", "/dhf", "/savings"
 SlashCmdList.DRAGSHEDGEFUND = function(msg)
     if not GG.db then return end
     local cmd, rest = (msg or ""):lower():match("^%s*(%S*)%s*(.-)%s*$")
@@ -505,12 +505,12 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
         local count = max(#db.goals, 1)
         db.pct = min(max(floor(num), 0), floor(100 / count))
         for _, g in ipairs(db.goals) do g.pct = db.pct end
-        print("|cffffd700Hedge Fund:|r every goal now saves " .. db.pct .. "% of each gain.")
+        print("|cffffd700Savings Pal:|r every goal now saves " .. db.pct .. "% of each gain.")
     elseif (cmd == "add" or cmd == "set") and num then
-        if not goal then print("|cffffd700Hedge Fund:|r no goal with that number.") return end
+        if not goal then print("|cffffd700Savings Pal:|r no goal with that number.") return end
         local c = floor(num * COPPER_PER_GOLD)
         goal.saved = max(cmd == "add" and (goal.saved + c) or c, 0)
-        print("|cffffd700Hedge Fund:|r " .. goal.name .. ": saved is now " .. GG.Money(goal.saved))
+        print("|cffffd700Savings Pal:|r " .. goal.name .. ": saved is now " .. GG.Money(goal.saved))
     elseif cmd == "characters" or cmd == "chars" then
         GG.Show("characters")
     elseif cmd == "shared" then
@@ -523,13 +523,13 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
         if GG.ToggleMini then GG.ToggleMini() end
     elseif cmd == "lock" then
         db.miniLock = not db.miniLock
-        print("|cffffd700Hedge Fund:|r overlay " .. (db.miniLock and "locked." or "unlocked. Drag to move."))
+        print("|cffffd700Savings Pal:|r overlay " .. (db.miniLock and "locked." or "unlocked. Drag to move."))
     elseif cmd == "scale" and num then
         db.miniScale = min(max(num, 0.5), 2)
         if GG.mini then GG.mini:SetScale(db.miniScale) end
     elseif cmd == "tips" then
         db.miniTips = db.miniTips == false
-        print("|cffffd700Hedge Fund:|r overlay tip " .. (db.miniTips and "on." or "off."))
+        print("|cffffd700Savings Pal:|r overlay tip " .. (db.miniTips and "on." or "off."))
     elseif cmd == "saved" then
         GG.ConfirmSaved()
     elseif cmd == "reset" then
@@ -537,9 +537,9 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
         for _, e in ipairs(db.log) do
             if e.cut then e.remaining = {}; GG.UpdateEntry(e) end
         end
-        print("|cffffd700Hedge Fund:|r all goals cleared.")
+        print("|cffffd700Savings Pal:|r all goals cleared.")
     else
-        print("|cffffd700Hedge Fund:|r /gg  - show or hide")
+        print("|cffffd700Savings Pal:|r /gg  - show or hide")
         print("  /gg goal  - add or change goals")
         print("  /gg mini  - show or hide the overlay")
         print("  /gg lock  - lock the overlay")

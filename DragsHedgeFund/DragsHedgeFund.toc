@@ -1,9 +1,9 @@
 ## Interface: 16001
 ## X-Curse-Project-ID: 1791039
-## Title: |cffffd700Drags|r Hedge Fund
-## Notes: Saves part of every gold gain for your mount. Type /gg
+## Title: |cffffd700Savings|r Pal
+## Notes: Savings Pal: saves part of every gold gain for your goals. Was Drags Hedge Fund. Type /gg
 ## Author: Yungslaya
-## Version: 1.4.4
+## Version: 1.5.0
 ## SavedVariablesPerCharacter: DragsHedgeFundDB
 ## SavedVariables: DragsHedgeFundAccountDB
 ## IconTexture: Interface\Icons\INV_Misc_Coin_01
@@ -14,3 +14,4 @@ Characters.lua
 UI.lua
 Mini.lua
 Mail.lua
+Notices.lua

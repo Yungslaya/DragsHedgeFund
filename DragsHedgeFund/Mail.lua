@@ -227,7 +227,7 @@ local function Build()
         insets = { left = 11, right = 12, top = 12, bottom = 11 },
     })
 
-    local t = text(P, 16, 1, 0.82, 0); t:SetPoint("TOP", 0, -18); t:SetText("Drags Hedge Fund")
+    local t = text(P, 16, 1, 0.82, 0); t:SetPoint("TOP", 0, -18); t:SetText("Savings Pal")
     local l = text(P, 14, 1, 0.82, 0); l:SetPoint("TOP", 0, -44); l:SetText("To put away")
     P.owed = text(P, 20); P.owed:SetPoint("TOP", 0, -62)
 

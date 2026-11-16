@@ -47,7 +47,7 @@ function GG.BuildMini()
     M:SetScript("OnEnter", function(self)
         if not GameTooltip then return end
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Drags Hedge Fund", 1, 0.82, 0)
+        GameTooltip:AddLine("Savings Pal", 1, 0.82, 0)
         GameTooltip:AddLine("Right-click: big window", 1, 1, 1)
         GameTooltip:AddLine(GG.db.miniLock and "Locked. /gg lock to move." or "Drag to move", 1, 1, 1)
         GameTooltip:Show()
