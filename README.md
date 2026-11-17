@@ -2,6 +2,8 @@
 
 Gold savings helper for WoW: Forever (Interface 16001).
 
+**What's new in 1.5.1:** Update messages only come from real CurseForge releases. Type `/reload` after updating.
+
 **What's new in 1.5.0:** Drags Hedge Fund is now called **Savings Pal**. Same addon, same goals and saved gold. New command `/savings`, and a message when a newer version is out. Fully restart WoW after updating (a new file was added).
 
 **What's new in 1.4.4:** the mailbox panel now works when another addon such as TradeSkillMaster replaces the mail window. It stands on its own, has its own Send mail button, and closes when you leave the mailbox.

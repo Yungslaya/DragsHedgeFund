@@ -2,6 +2,12 @@
 
 Every released version, newest first.
 
+## 1.5.1 (2026-11-17)
+
+- **Update messages** now only come from real CurseForge releases, so you never hear about a version that isn't out yet.
+
+Type `/reload` after updating.
+
 ## 1.5.0 (2026-11-16)
 
 - **New name: Savings Pal.** Drags Hedge Fund is now called Savings Pal. It's the same addon with the same goals and saved gold. A one-time popup explains this after you update.
