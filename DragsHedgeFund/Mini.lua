@@ -1,18 +1,14 @@
 local _, GG = ...
 
 -- Small overlay that can stay on screen. Drag to move, right-click opens the big window.
-local FONT = "Fonts\\FRIZQT__.TTF"
+-- Same look as the big window (Theme.lua). Each goal shows its own share of every gain.
 local W = 310
-local ROW = 35       -- one goal row
+local ROW = 52       -- one goal row: name line, bar, share line
+local L, R = 12, -12
 local M
 
-local function text(parent, size, r, g, b, justify)
-    local fs = parent:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(FONT, size, "OUTLINE")
-    fs:SetTextColor(r or 1, g or 1, b or 1)
-    fs:SetJustifyH(justify or "LEFT")
-    fs:SetShadowOffset(1, -1)
-    return fs
+local function text(parent, size, color, justify)
+    return GG.Text(parent, size, color, justify or "LEFT")
 end
 
 function GG.BuildMini()
@@ -23,13 +19,7 @@ function GG.BuildMini()
     M:SetSize(W, 150)
     M:SetFrameStrata("LOW")
     M:SetClampedToScreen(true)
-    M:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        edgeSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 },
-    })
-    M:SetBackdropColor(0.035, 0.06, 0.105, 0.95)
-    M:SetBackdropBorderColor(0.43, 0.45, 0.48, 1)
+    GG.Skin(M, 32)
     local p = db.miniPos
     if p then M:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else M:SetPoint("TOPRIGHT", -220, -200) end
     M:SetScale(db.miniScale or 1)
@@ -47,66 +37,53 @@ function GG.BuildMini()
     M:SetScript("OnEnter", function(self)
         if not GameTooltip then return end
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Savings Pal", 1, 0.82, 0)
+        GameTooltip:AddLine("Savings Pal", unpack(GG.C.gold))
         GameTooltip:AddLine("Right-click: big window", 1, 1, 1)
         GameTooltip:AddLine(GG.db.miniLock and "Locked. /gg lock to move." or "Drag to move", 1, 1, 1)
         GameTooltip:Show()
     end)
     M:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 
-    local L, R = 12, -12
-    -- top: what to put away + Saved button
-    M.owedL = text(M, 15)
-    M.owedL:SetPoint("TOPLEFT", L, -78)
-    M.owedL:SetPoint("RIGHT", M, "RIGHT", -80, 0)
-    M.saveBtn = CreateFrame("Button", nil, M, "UIPanelButtonTemplate")
-    M.saveBtn:SetSize(64, 22)
-    M.saveBtn:SetPoint("TOPRIGHT", R + 2, -74)
-    M.saveBtn:SetText("Saved")
-    local bfs = M.saveBtn:GetFontString()
-    if bfs then bfs:SetFont(FONT, 13, "") end
-    M.saveBtn:SetScript("OnClick", function() GG.ConfirmSaved(); GG.Refresh() end)
-    M.saveBtn:SetScript("OnEnter", function(self)
+    -- header band: what you can spend
+    M.spendLabel = text(M, 14, GG.C.gray)
+    M.spendLabel:SetPoint("LEFT", M, "TOPLEFT", L, -17)
+    M.spend = text(M, 18, GG.C.white, "RIGHT")
+    M.spend:SetPoint("RIGHT", M, "TOPRIGHT", R, -17)
+
+    -- what to put away now (all goals together) + Saved button
+    M.owedL = text(M, 15, GG.C.gold)
+    M.owedL:SetWordWrap(false)
+    M.saveBtn = GG.FlatButton(M, "Saved", 66, 24, 14, function() GG.ConfirmSaved(); GG.Refresh() end)
+    M.saveBtn:HookScript("OnEnter", function(self)
         if not GameTooltip then return end
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:AddLine("Click when you put this gold away", 1, 1, 1)
         GameTooltip:Show()
     end)
-    M.saveBtn:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    M.saveBtn:HookScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 
-    M.spendLabel = text(M, 13, 0.78, 0.79, 0.81)
-    M.spendLabel:SetPoint("TOPLEFT", L, -12)
-    M.spendLabel:SetText("CAN SPEND")
-    M.spend = text(M, 18, 1, 1, 1, "RIGHT")
-    M.spend:SetPoint("TOPRIGHT", R, -10)
-    M.line = text(M, 14)
-    M.line:SetPoint("TOPLEFT", L, -108)
-    M.line:SetPoint("RIGHT", M, "RIGHT", R, 0)
+    M.line = text(M, 14, GG.C.gray)
     M.line:SetWordWrap(false)
 
-    -- one row per goal: name + saved/goal, then a bar
+    -- one row per goal: name + saved/goal, bar, then "20% of gains" and its own set-aside
     M.rows = {}
     for i = 1, GG.MAX_GOALS do
-        local y = -140 - (i - 1) * ROW
         local r = {}
-        r.name = text(M, 13, 1, 0.82, 0)
-        r.name:SetPoint("TOPLEFT", L, y)
-        r.name:SetWidth(105)
+        r.name = text(M, 15, GG.C.gold)
+        r.name:SetWidth(130)
         r.name:SetWordWrap(false)
-        r.val = text(M, 13, 1, 1, 1, "RIGHT")
-        r.val:SetPoint("TOPRIGHT", R, y)
-        r.val:Hide()
-        r.bar = GG.GoalBar(M, W - 2 * L, 7, 13)
+        r.val = text(M, 14, GG.C.white, "RIGHT")
+        r.bar = GG.GoalBar(M, W - 2 * L, 8, 12)
         r.bar.label:Hide()
-        r.bar:SetPoint("TOPLEFT", L, y - 22)
+        r.share = text(M, 13, GG.C.gray)
+        r.aside = text(M, 13, GG.C.gold, "RIGHT")
         M.rows[i] = r
     end
-    M.none = text(M, 14, 0.8, 0.8, 0.8)
-    M.none:SetPoint("TOPLEFT", L, -142)
+    M.none = text(M, 14, GG.C.gray)
+    M.none:SetPoint("TOPLEFT", L, -46)
     M.none:SetText("No goals. Right-click to add one.")
 
-    M.tip = text(M, 13, 0.85, 0.85, 0.85)
-    M.tip:SetPoint("RIGHT", M, "RIGHT", R, 0)
+    M.tip = text(M, 13, GG.C.gray)
 
     -- its own 1-second clock, so it updates while the big window is closed
     local acc = 0
@@ -129,64 +106,70 @@ end
 
 function GG.RefreshMini()
     if not M then return end
-    local combat=GG.safe(InCombatLockdown)==true
-    M:SetShown(GG.db.mini and #GG.db.goals>0 and not (GG.db.miniHideCombat and combat) and true or false)
+    local combat = GG.safe(InCombatLockdown) == true
+    M:SetShown(GG.db.mini and #GG.db.goals > 0 and not (GG.db.miniHideCombat and combat) and true or false)
     if not M:IsShown() then return end
     local db = GG.db
     local goals = db.goals
 
+    local spend = GG.CanSpend()
+    M.spendLabel:SetText(spend < 0 and "|cffff7777Short on savings|r" or "Can spend")
+    M.spend:SetText(GG.MoneyShort(math.abs(spend)))
+
+    local y = -44
     local owed = GG.TotalOwed()
-    local y = -36
     M.owedL:SetShown(owed > 0)
     M.saveBtn:SetShown(owed > 0)
     if owed > 0 then
         M.owedL:ClearAllPoints()
-        M.owedL:SetPoint("TOPLEFT", 12, y)
-        M.owedL:SetPoint("RIGHT", M, "RIGHT", -80, 0)
+        M.owedL:SetPoint("TOPLEFT", L, y)
+        M.owedL:SetPoint("RIGHT", M, "RIGHT", -84, 0)
         M.owedL:SetText("Set aside  " .. GG.MoneyShort(owed))
         M.saveBtn:ClearAllPoints()
-        M.saveBtn:SetPoint("TOPRIGHT", -10, y + 3)
-        y = y - 25
+        M.saveBtn:SetPoint("TOPRIGHT", R, y + 4)
+        y = y - 26
     end
 
-    local spend = GG.CanSpend()
-    M.spendLabel:SetText(spend < 0 and "|cffff7777Savings shortfall|r" or "Available")
-    M.spend:SetText(GG.MoneyShort(math.abs(spend)))
     M.line:ClearAllPoints()
-    M.line:SetPoint("TOPLEFT", 12, y)
-    M.line:SetText((GG.IsShared() and "Shared savings  " or "Saved  ") .. GG.MoneyShort(GG.TotalSaved()))
-    y = y - 25
+    M.line:SetPoint("TOPLEFT", L, y)
+    M.line:SetPoint("RIGHT", M, "RIGHT", R, 0)
+    M.line:SetText((GG.IsShared() and "Shared savings  " or "Saved  ") .. GG.MoneyShort(GG.TotalSaved()) ..
+        "   |cff8a8478(" .. GG.TotalPct() .. "% of each gain)|r")
+    y = y - 26
 
     M.none:SetShown(#goals == 0)
     for i, r in ipairs(M.rows) do
         local g = goals[i]
         local show = g ~= nil
         r.name:SetShown(show); r.val:SetShown(show); r.bar:SetShown(show)
+        r.share:SetShown(show); r.aside:SetShown(show)
         if g then
             local st = GG.GoalStatus(g)
-            r.name:ClearAllPoints()
-            r.name:SetPoint("TOPLEFT", 12, y)
-            r.val:ClearAllPoints()
-            r.val:SetPoint("TOPRIGHT", -12, y)
-            r.bar:ClearAllPoints()
-            r.bar:SetPoint("TOPLEFT", 12, y - 18)
+            r.name:ClearAllPoints();  r.name:SetPoint("TOPLEFT", L, y)
+            r.val:ClearAllPoints();   r.val:SetPoint("TOPRIGHT", R, y)
+            r.bar:ClearAllPoints();   r.bar:SetPoint("TOPLEFT", L, y - 20)
+            r.share:ClearAllPoints(); r.share:SetPoint("TOPLEFT", L, y - 32)
+            r.aside:ClearAllPoints(); r.aside:SetPoint("TOPRIGHT", R, y - 32)
             r.name:SetText(g.name)
-            y = y - ROW
             if st.done then
-                r.val:SetText("|cff20ff20GOAL MET!|r")
+                r.val:SetText("|cff73de99Goal met|r")
             else
-                r.val:SetText(GG.MoneyShort(g.saved) .. " |cffaaaaaa/|r " .. GG.MoneyShort(g.amount) .. "  |cffaaaaaa(" .. GG.PctText(st.frac) .. ")|r")
+                r.val:SetText(GG.MoneyShort(g.saved) .. " |cff8a8478/|r " .. GG.MoneyShort(g.amount) ..
+                    "  |cff8a8478" .. GG.PctText(st.frac) .. "|r")
             end
             r.bar.top:SetValue(st.frac)
             r.bar:SetValue(st.frac2)
-
+            r.share:SetText(g.pct .. "% of each gain")
+            local here = GG.MyGoalOwed(g)
+            r.aside:SetText(here > 0 and ("Set aside  " .. GG.MoneyShort(here)) or "")
+            y = y - ROW
         end
     end
 
     local tip = (db.miniTips ~= false) and GG.Tips()[1] or nil
     M.tip:ClearAllPoints()
-    M.tip:SetPoint("TOPLEFT", 12, y - 2)
-    M.tip:SetPoint("RIGHT", M, "RIGHT", -12, 0)
+    M.tip:SetPoint("TOPLEFT", L, y - 2)
+    M.tip:SetPoint("RIGHT", M, "RIGHT", R, 0)
     M.tip:SetText(tip and tip:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "") or "")
     -- grow to fit the tip (it can wrap to 2 lines)
     local th = tip and M.tip.GetStringHeight and M.tip:GetStringHeight()

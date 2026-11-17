@@ -2,6 +2,8 @@
 
 Gold savings helper for WoW: Forever (Interface 16001).
 
+**What's new in 1.5.2:** each goal shows its percent and how much is set aside for it, and a new look that matches ProfessionPal. Fully restart WoW after updating (a new file was added).
+
 **What's new in 1.5.1:** Update messages only come from real CurseForge releases. Type `/reload` after updating.
 
 **What's new in 1.5.0:** Drags Hedge Fund is now called **Savings Pal**. Same addon, same goals and saved gold. New command `/savings`, and a message when a newer version is out. Fully restart WoW after updating (a new file was added).

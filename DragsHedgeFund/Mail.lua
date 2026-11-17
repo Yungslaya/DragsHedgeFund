@@ -40,11 +40,8 @@ end
 local function standsAlone() return not (MailFrame and MailFrame:IsVisible()) end
 
 local function text(parent, size, r, g, b)
-    local fs = parent:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(FONT, size, "OUTLINE")
-    fs:SetTextColor(r or 1, g or 1, b or 1)
-    fs:SetShadowOffset(1, -1)
-    return fs
+    local w = GG.C.white
+    return GG.Text(parent, size, { r or w[1], g or w[2], b or w[3] }, "CENTER")
 end
 
 local function trim(s) return (s or ""):gsub("^%s+", ""):gsub("%s+$", "") end
@@ -217,19 +214,14 @@ local function Build()
         Place()
     end)
     local close = CreateFrame("Button", nil, P, "UIPanelCloseButton")
-    close:SetPoint("TOPRIGHT", -4, -4)
+    close:SetPoint("TOPRIGHT", 2, 2)
     close:SetScript("OnClick", function() P:Hide() end)
     P.refresh = Refresh
-    P:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 32, edgeSize = 32,
-        insets = { left = 11, right = 12, top = 12, bottom = 11 },
-    })
+    GG.Skin(P, 32)
 
-    local t = text(P, 16, 1, 0.82, 0); t:SetPoint("TOP", 0, -18); t:SetText("Savings Pal")
-    local l = text(P, 14, 1, 0.82, 0); l:SetPoint("TOP", 0, -44); l:SetText("To put away")
-    P.owed = text(P, 20); P.owed:SetPoint("TOP", 0, -62)
+    local t = GG.Text(P, 18, GG.C.gold); t:SetPoint("TOPLEFT", 12, -8); t:SetText("Savings Pal")
+    local l = text(P, 14, unpack(GG.C.gray)); l:SetPoint("TOP", 0, -46); l:SetText("To put away")
+    P.owed = text(P, 20); P.owed:SetPoint("TOP", 0, -64)
 
     local n = text(P, 14); n:SetPoint("TOPLEFT", 22, -100); n:SetText("Send to:")
     P.name = CreateFrame("EditBox", nil, P, "InputBoxTemplate")
@@ -241,27 +233,17 @@ local function Build()
     P.name:SetScript("OnEnterPressed", P.name.ClearFocus)
     P.name:SetScript("OnEscapePressed", P.name.ClearFocus)
 
-    P.fill = CreateFrame("Button", nil, P, "UIPanelButtonTemplate")
-    P.fill:SetSize(150, 28)
+    P.fill = GG.FlatButton(P, "Fill in mail", 150, 28, 15, GG.FillMail)
     P.fill:SetPoint("TOP", 0, -132)
-    P.fill:SetText("Fill in mail")
-    local fs = P.fill:GetFontString()
-    if fs then fs:SetFont(FONT, 15, "") end
-    P.fill:SetScript("OnClick", GG.FillMail)
 
     -- Only shown when the panel stands alone: Blizzard's own Send button is hidden then.
-    P.send = CreateFrame("Button", nil, P, "UIPanelButtonTemplate")
-    P.send:SetSize(150, 28)
+    P.send = GG.FlatButton(P, "Send mail", 150, 28, 15, function() SendNow() end)
     P.send:SetPoint("TOP", 0, -132)
-    P.send:SetText("Send mail")
-    local sendText = P.send:GetFontString()
-    if sendText then sendText:SetFont(FONT, 15, "") end
-    P.send:SetScript("OnClick", function() SendNow() end)
     P.send:Hide()
 
     P.msg = text(P, 13); P.msg:SetPoint("TOP", 0, -166); P.msg:SetWidth(200)
     P.msg:SetText("Then press Send.")
-    P.hint = text(P, 11, 0.6, 0.6, 0.6); P.hint:SetPoint("BOTTOM", 0, 14)
+    P.hint = text(P, 12, unpack(GG.C.gray)); P.hint:SetPoint("BOTTOM", 0, 14)
 
     P:SetScript("OnShow", function()
         P.name:SetText(GG.db.mailTo or "")

@@ -2,6 +2,13 @@
 
 Every released version, newest first.
 
+## 1.5.2 (2026-11-17)
+
+- **Each goal shows its share.** Under every goal's bar you now see its percent of each gain and how much is set aside for it right now. Example: goals at 20% and 10% save 30% of each gain, split 20% and 10%.
+- **New look.** The window, overlay and mailbox panel now match ProfessionPal: dark panels, gold titles, flat buttons and easier-to-read text.
+
+Fully restart WoW after updating (a new file was added).
+
 ## 1.5.1 (2026-11-17)
 
 - **Update messages** now only come from real CurseForge releases, so you never hear about a version that isn't out yet.
