@@ -1,11 +1,12 @@
 local _, GG = ...
 
--- Costs from Wowhead (Forever), 2026-11-05:
+-- Costs from Wowhead's WoW: Forever riding guide (checked 2026-11-18):
+--   https://www.wowhead.com/forever/guide/unlocking-riding-skill-mounts
 -- Apprentice Riding 100g (level 40), Journeyman Riding 1,000g (level 60).
--- Faction mounts: about 100g at 40, 1,000g epic at 60.
+-- Your first mount at each step is free. Extra mounts are 20g and 200g.
 GG.PRESETS = {
-    { key = "l40", name = "Level 40 mount", gold = 200, note = "Riding 100g + mount 100g" },
-    { key = "l60", name = "Level 60 epic mount", gold = 2000, note = "Riding 1,000g + mount 1,000g" },
+    { key = "l40", name = "Level 40 mount", gold = 100, note = "Riding 100g. First mount is free." },
+    { key = "l60", name = "Level 60 fast mount", gold = 1000, note = "Riding 1,000g. First mount is free." },
 }
 -- Paladins and Warlocks get their mount from a class quest: riding only.
 GG.CLASS_MOUNT = { PALADIN = true, WARLOCK = true }

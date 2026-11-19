@@ -1,34 +1,42 @@
--- Savings Pal look: the same style as ProfessionPal (dark leather panels, thin bronze edge, gold titles,
--- flat buttons), kept here so Savings Pal never needs any other addon.
+-- Savings Pal look: the shared style of the addon family, where every window is a big WoW tooltip
+-- (blue-black panel, the tooltip border from the game, gold labels, white values, red buttons with
+-- gold words). Kept here so Savings Pal never needs any other addon.
 local _, GG = ...
 
 GG.FONT = "Fonts\\ARIALN.TTF"          -- body text
 GG.TITLE_FONT = "Fonts\\FRIZQT__.TTF"  -- titles and big numbers
 GG.C = {
-    gold  = { 0.94, 0.78, 0.47 },
-    white = { 0.93, 0.94, 0.96 },
-    gray  = { 0.69, 0.74, 0.81 },
-    green = { 0.45, 0.87, 0.60 },
-    red   = { 1.00, 0.35, 0.35 },
+    gold  = { 1, 0.820, 0 },
+    white = { 1, 1, 1 },
+    gray  = { 0.640, 0.660, 0.740 },
+    green = { 0.250, 0.880, 0.250 },
+    red   = { 1, 0.290, 0.240 },
 }
 GG.THEME = {
-    bg        = { 0.083, 0.063, 0.045, 0.97 },
-    band      = { 0.148, 0.109, 0.073, 1.00 },
-    border    = { 0.382, 0.286, 0.161, 1.00 },
-    inset     = { 0.120, 0.093, 0.064, 0.96 },
-    btn       = { 0.157, 0.116, 0.077, 1.00 },
-    btnHover  = { 0.235, 0.175, 0.104, 1.00 },
-    btnBorder = { 0.390, 0.288, 0.157, 1.00 },
-    barSaved  = { 0.94, 0.74, 0.30, 1.00 },   -- gold you put away
-    barAside  = { 0.52, 0.40, 0.20, 1.00 },   -- gold set aside, not put away yet
-    barBack   = { 0.05, 0.04, 0.03, 0.90 },
+    bg        = { 0.030, 0.040, 0.090, 0.94 },
+    band      = { 0.030, 0.040, 0.090, 0 },
+    border    = { 0.730, 0.740, 0.780, 1.00 },
+    line      = { 0.200, 0.230, 0.330, 1.00 },
+    inset     = { 0.070, 0.085, 0.160, 0.92 },
+    btn       = { 0.420, 0.070, 0.040, 1.00 },
+    btnHover  = { 0.580, 0.110, 0.070, 1.00 },
+    btnBorder = { 0.850, 0.710, 0.420, 1.00 },
+    barSaved  = { 1.00, 0.82, 0.00, 1.00 },   -- gold you put away
+    barAside  = { 0.55, 0.45, 0.10, 1.00 },   -- gold set aside, not put away yet
+    barBack   = { 0.00, 0.00, 0.00, 0.90 },
 }
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 
--- Flat panel with a 1-pixel bronze edge; bandHeight adds the lighter header strip.
+-- Windows (anything with a header strip) wear the tooltip border from the game; buttons and
+-- small boxes keep a thin flat edge.
 function GG.Skin(f, bandHeight, bg)
     local T = GG.THEME
-    if f.SetBackdrop then
+    if bandHeight and f.SetBackdrop then
+        f:SetBackdrop({ bgFile = WHITE, edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 16,
+                        insets = { left = 4, right = 4, top = 4, bottom = 4 } })
+        f:SetBackdropColor(unpack(bg or T.bg))
+        f:SetBackdropBorderColor(unpack(T.border))
+    elseif f.SetBackdrop then
         f:SetBackdrop({ bgFile = WHITE, edgeFile = WHITE, edgeSize = 1,
                         insets = { left = 1, right = 1, top = 1, bottom = 1 } })
         f:SetBackdropColor(unpack(bg or T.bg))
@@ -38,12 +46,12 @@ function GG.Skin(f, bandHeight, bg)
         local band = f:CreateTexture(nil, "BACKGROUND", nil, 1)
         band:SetTexture(WHITE)
         band:SetVertexColor(unpack(T.band))
-        band:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
-        band:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+        band:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)
+        band:SetPoint("TOPRIGHT", f, "TOPRIGHT", -5, -5)
         band:SetHeight(bandHeight)
         local line = f:CreateTexture(nil, "BACKGROUND", nil, 2)
         line:SetTexture(WHITE)
-        line:SetVertexColor(unpack(T.border))
+        line:SetVertexColor(unpack(T.line))
         line:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, 0)
         line:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, 0)
         line:SetHeight(1)

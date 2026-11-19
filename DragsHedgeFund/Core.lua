@@ -441,7 +441,11 @@ end
 GG.tipStep = 0
 function GG.Tips()
     local list = {}
-    if (GG.grayCount or 0) > 0 then
+    -- the coach's line for right now comes first
+    local coach, aboutGrays
+    if GG.CoachAdvice then coach, aboutGrays = GG.CoachAdvice() end
+    if coach then list[#list + 1] = coach end
+    if (GG.grayCount or 0) > 0 and not aboutGrays then
         list[#list + 1] = "|cff9d9d9dSell grays:|r " .. GG.Money(GG.grayValue)
     end
     local pool = {}
@@ -527,6 +531,9 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
     elseif cmd == "scale" and num then
         db.miniScale = min(max(num, 0.5), 2)
         if GG.mini then GG.mini:SetScale(db.miniScale) end
+    elseif cmd == "coach" then
+        GG.db.coach = GG.db.coach == false
+        print("|cffffd700Savings Pal:|r coach tips " .. (GG.db.coach and "on." or "off."))
     elseif cmd == "tips" then
         db.miniTips = db.miniTips == false
         print("|cffffd700Savings Pal:|r overlay tip " .. (db.miniTips and "on." or "off."))
@@ -545,6 +552,7 @@ SlashCmdList.DRAGSHEDGEFUND = function(msg)
         print("  /gg lock  - lock the overlay")
         print("  /gg scale 1.2  - overlay size")
         print("  /gg tips  - overlay tip on or off")
+        print("  /gg coach  - coach tips (bags, jobs, trainer) on or off")
         print("  /gg pct 20  - every goal saves 20%")
         print("  /gg saved  - I put the gold away")
         print("  /gg add 10 2  - add 10g to goal 2 (fix)")

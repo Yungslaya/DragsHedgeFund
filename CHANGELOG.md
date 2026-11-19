@@ -2,6 +2,15 @@
 
 Every released version, newest first.
 
+## 1.6.0 (2026-11-18)
+
+- **New look.** The window, overlay and mailbox panel now look like a big WoW tooltip, the same as ProfessionPal, Market Ledger and Battle Buddy.
+- **Gold coach.** The first tip is now about what to do right now: sell grays when a vendor is open, train only what you use while you are still saving, buy a bag for an empty bag slot, or pick up a gathering profession. It only shows a line of text. Type `/gg coach` to turn it off.
+- **Mount goals fixed.** The ready-made mount goals asked for too much gold. Riding is 100 gold at level 40 and 1,000 gold at level 60, and your first mount at each step is free. New goals use those numbers. Goals you already made are not changed.
+- **Five more languages.** Savings Pal now shows its windows, buttons, tips and messages in German, French, Spanish, Russian and Simplified Chinese when your game uses that language. The note in your savings mail stays in English. Only English has been tested in the game. If something looks wrong in your language, please report it.
+
+Fully restart WoW after updating (a new file was added).
+
 ## 1.5.2 (2026-11-17)
 
 - **Each goal shows its share.** Under every goal's bar you now see its percent of each gain and how much is set aside for it right now. Example: goals at 20% and 10% save 30% of each gain, split 20% and 10%.
