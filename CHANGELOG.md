@@ -2,6 +2,14 @@
 
 Every released version, newest first.
 
+## 1.7.0 (2026-11-21)
+
+- **New look.** The window, overlay and mailbox panel have a stone frame with gold corners, new fonts and red gold-edged buttons. Our other addons now look the same.
+- **Tabs show where you are.** This character or Shared goals has a gold line under it.
+- **What's new window.** After an update, one window shows what changed, with a tab for each of our addons you have. Type `/savings news` to see it again.
+
+Fully restart WoW after updating (new files were added).
+
 ## 1.6.0 (2026-11-18)
 
 - **New look.** The window, overlay and mailbox panel now look like a big WoW tooltip, the same as ProfessionPal, Market Ledger and Battle Buddy.

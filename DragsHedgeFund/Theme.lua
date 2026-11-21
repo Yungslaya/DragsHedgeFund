@@ -1,27 +1,26 @@
--- Savings Pal look: the shared style of the addon family, where every window is a big WoW tooltip
--- (blue-black panel, the tooltip border from the game, gold labels, white values, red buttons with
--- gold words). Kept here so Savings Pal never needs any other addon.
+-- Savings Pal look: the shared style of the addon family (EmporiumTheme.lua, a copy ships in this
+-- addon): ornate stone frame with gold corners, steel cards, gold labels, red buttons.
 local _, GG = ...
 
-GG.FONT = "Fonts\\ARIALN.TTF"          -- body text
-GG.TITLE_FONT = "Fonts\\FRIZQT__.TTF"  -- titles and big numbers
+GG.FONT = DragbagEmporiumTheme.body          -- body text
+GG.TITLE_FONT = DragbagEmporiumTheme.title  -- titles and big numbers
 GG.C = {
-    gold  = { 1, 0.820, 0 },
-    white = { 1, 1, 1 },
-    gray  = { 0.640, 0.660, 0.740 },
+    gold  = { 0.85, 0.71, 0.42 },   -- the family's gold, white and gray (same in every addon)
+    white = { 0.94, 0.93, 0.90 },
+    gray  = { 0.71, 0.71, 0.74 },
     green = { 0.250, 0.880, 0.250 },
     red   = { 1, 0.290, 0.240 },
 }
 GG.THEME = {
     bg        = { 0.030, 0.040, 0.090, 0.94 },
     band      = { 0.030, 0.040, 0.090, 0 },
-    border    = { 0.730, 0.740, 0.780, 1.00 },
+    border    = { 0.620, 0.480, 0.270, 1.00 },
     line      = { 0.200, 0.230, 0.330, 1.00 },
     inset     = { 0.070, 0.085, 0.160, 0.92 },
     btn       = { 0.420, 0.070, 0.040, 1.00 },
     btnHover  = { 0.580, 0.110, 0.070, 1.00 },
     btnBorder = { 0.850, 0.710, 0.420, 1.00 },
-    barSaved  = { 1.00, 0.82, 0.00, 1.00 },   -- gold you put away
+    barSaved  = { 0.88, 0.73, 0.38, 1.00 },   -- gold you put away
     barAside  = { 0.55, 0.45, 0.10, 1.00 },   -- gold set aside, not put away yet
     barBack   = { 0.00, 0.00, 0.00, 0.90 },
 }
@@ -29,7 +28,14 @@ local WHITE = "Interface\\Buttons\\WHITE8X8"
 
 -- Windows (anything with a header strip) wear the tooltip border from the game; buttons and
 -- small boxes keep a thin flat edge.
-function GG.Skin(f, bandHeight, bg)
+-- opts: { compact = true } for the small overlay, title = the title text, close = the close button
+function GG.Skin(f, bandHeight, bg, opts)
+    local E = DragbagEmporiumTheme
+    if E then
+        if bandHeight or opts then return E.Window(f, bandHeight, opts) end
+        if bg == GG.THEME.btn then return end      -- buttons: FlatButton styles them when built
+        return E.Card(f)
+    end
     local T = GG.THEME
     if bandHeight and f.SetBackdrop then
         f:SetBackdrop({ bgFile = WHITE, edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 16,
@@ -63,7 +69,8 @@ end
 function GG.Text(parent, size, color, justify)
     local fs = parent:CreateFontString(nil, "OVERLAY")
     size = math.max(12, size or 14)
-    fs:SetFont(size >= 18 and GG.TITLE_FONT or GG.FONT, size, "")
+    -- big text is bold; the title font is for window titles only
+    DragbagEmporiumTheme.Font(fs, size, size >= 18 and "bold" or "body")
     fs:SetShadowOffset(1, -1)
     fs:SetShadowColor(0, 0, 0, 1)
     fs:SetTextColor(unpack(color or GG.C.white))
@@ -76,10 +83,8 @@ function GG.FlatButton(parent, label, w, h, size, onClick)
     local T = GG.THEME
     local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
     b:SetSize(w, h or 28)
-    GG.Skin(b, nil, T.btn)
-    b:SetBackdropBorderColor(unpack(T.btnBorder))
     local fs = b:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(GG.FONT, size or 15, "")
+    DragbagEmporiumTheme.Font(fs, size or 15, "bold")
     fs:SetShadowOffset(1, -1)
     fs:SetTextColor(unpack(GG.C.gold))
     fs:SetPoint("LEFT", b, "LEFT", 4, 0)
@@ -87,12 +92,9 @@ function GG.FlatButton(parent, label, w, h, size, onClick)
     if fs.SetWordWrap then fs:SetWordWrap(false) end
     b:SetFontString(fs)
     b:SetText(label)
-    b:SetScript("OnEnter", function(self) if self:IsEnabled() then self:SetBackdropColor(unpack(T.btnHover)) end end)
-    b:SetScript("OnLeave", function(self) self:SetBackdropColor(unpack(T.btn)) end)
-    b:SetScript("OnDisable", function() fs:SetTextColor(0.45, 0.43, 0.40) end)
-    b:SetScript("OnEnable", function() fs:SetTextColor(unpack(GG.C.gold)) end)
     b:SetScript("OnMouseDown", function(self) if self:IsEnabled() then fs:SetPoint("LEFT", self, "LEFT", 5, -1) end end)
     b:SetScript("OnMouseUp", function(self) fs:SetPoint("LEFT", self, "LEFT", 4, 0) end)
     if onClick then b:SetScript("OnClick", onClick) end
+    DragbagEmporiumTheme.Button(b, "ruby")   -- red button with the gold edge; hover, disabled and fit handled there
     return b
 end

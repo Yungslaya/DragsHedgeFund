@@ -1,6 +1,6 @@
 local _, GG = ...
 
-local FONT = "Fonts\\FRIZQT__.TTF"
+local FONT = GG.FONT
 local W = 460
 local CARD = 78      -- height of one goal card
 local floor, max, min = math.floor, math.max, math.min
@@ -68,6 +68,7 @@ local function BuildMain(m)
     wallet:SetPoint("TOPLEFT", 18, -40)
     wallet:SetSize(W - 36, 90)
     wallet:SetColorTexture(unpack(GG.THEME.inset))
+    DragbagEmporiumTheme.CardOn(m, wallet)
     m.spendLabel = text(m, 15, unpack(GG.C.gray))
     m.spendLabel:SetPoint("TOP", 0, -50)
     m.spendLabel:SetText("CAN SPEND")
@@ -102,6 +103,7 @@ local function BuildMain(m)
         bg:SetAllPoints()
         local T = GG.THEME
         bg:SetColorTexture(T.inset[1], T.inset[2], T.inset[3], i % 2 == 1 and 1 or 0.6)
+        DragbagEmporiumTheme.CardOn(c, bg)
         c.name = text(c, 17, unpack(GG.C.gold))
         c.name:SetJustifyH("LEFT")
         c.name:SetPoint("TOPLEFT", 10, -6)
@@ -197,9 +199,9 @@ local function BuildSetup(s)
     editor:SetPoint("CENTER")
     editor:SetFrameStrata("DIALOG")
     editor:EnableMouse(true)
-    GG.Skin(editor, 34)
     editor.title = text(editor, 16, unpack(GG.C.gold))
     editor.title:SetPoint("TOP", 0, -10)
+    GG.Skin(editor, 34, nil, { title = editor.title })
     editor.label = text(editor, 13, 1, 1, 1)
     editor.label:SetPoint("TOP", 0, -40)
     editor.label:SetText("Edit saved amount")
@@ -459,7 +461,6 @@ function GG.BuildUI()
     F:SetSize(W, 480)
     F:SetFrameStrata("MEDIUM")
     F:SetClampedToScreen(true)
-    GG.Skin(F, 34)
     local p = db.pos
     if p then F:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else F:SetPoint("RIGHT", -80, 40) end
     F:EnableMouse(true)
@@ -477,8 +478,9 @@ function GG.BuildUI()
     title:SetText("Savings Pal")
 
     local close = CreateFrame("Button", nil, F, "UIPanelCloseButton")
-    close:SetPoint("TOPRIGHT", 2, 2)
+    close:SetPoint("TOPRIGHT", -8, -5)
     close:SetScript("OnClick", function() GG.Hide() end)
+    GG.Skin(F, 34, nil, { title = title, close = close })
 
     F.personalBtn = button(F, "This character", 132, 26, 14, function() GG.SetScope(false) end)
     F.personalBtn:SetPoint("TOPLEFT", 18, -42)
@@ -681,8 +683,10 @@ end
 
 function GG.Refresh()
     if not F or not F:IsShown() then return end
-    F.personalBtn:SetText(not GG.IsShared() and "|cffffffffThis character|r" or "This character")
-    F.sharedBtn:SetText(GG.IsShared() and "|cffffffffShared goals|r" or "Shared goals")
+    F.personalBtn:SetText("This character")
+    F.sharedBtn:SetText("Shared goals")
+    DragbagEmporiumTheme.Select(F.personalBtn, not GG.IsShared())   -- tabs: gold underline on the one you are on
+    DragbagEmporiumTheme.Select(F.sharedBtn, GG.IsShared())
     if F.view == "options" then
         for key,c in pairs(F.optionChecks) do c:SetChecked(GG.db[key] and true or false) end
         F:SetHeight(420)

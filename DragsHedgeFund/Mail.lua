@@ -7,7 +7,7 @@ local _, GG = ...
 -- Addons such as TradeSkillMaster replace that window with their own, which hides Blizzard's
 -- boxes and Send button. Then the panel stands on its own (drag it where you like) and shows
 -- its own "Send mail" button: one click from you sends that one mail.
-local FONT = "Fonts\\FRIZQT__.TTF"
+local FONT = GG.FONT
 local min = math.min
 local POSTAGE = 30
 local P            -- the panel next to the mail window
@@ -214,12 +214,12 @@ local function Build()
         Place()
     end)
     local close = CreateFrame("Button", nil, P, "UIPanelCloseButton")
-    close:SetPoint("TOPRIGHT", 2, 2)
+    close:SetPoint("TOPRIGHT", -6, -4)
     close:SetScript("OnClick", function() P:Hide() end)
     P.refresh = Refresh
-    GG.Skin(P, 32)
 
     local t = GG.Text(P, 18, GG.C.gold); t:SetPoint("TOPLEFT", 12, -8); t:SetText("Savings Pal")
+    GG.Skin(P, 32, nil, { title = t, close = close })
     local l = text(P, 14, unpack(GG.C.gray)); l:SetPoint("TOP", 0, -46); l:SetText("To put away")
     P.owed = text(P, 20); P.owed:SetPoint("TOP", 0, -64)
 

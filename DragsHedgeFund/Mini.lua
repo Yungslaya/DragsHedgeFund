@@ -19,7 +19,7 @@ function GG.BuildMini()
     M:SetSize(W, 150)
     M:SetFrameStrata("LOW")
     M:SetClampedToScreen(true)
-    GG.Skin(M, 32)
+    GG.Skin(M, 32, nil, { compact = true })
     local p = db.miniPos
     if p then M:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else M:SetPoint("TOPRIGHT", -220, -200) end
     M:SetScale(db.miniScale or 1)
