@@ -1,28 +1,102 @@
-# Savings Pal (formerly Drags Hedge Fund)
+![Savings Pal](https://raw.githubusercontent.com/Yungslaya/DragsHedgeFund/main/.previews/00-banner.jpg)
 
-Gold savings helper for WoW: Forever (Interface 16001).
+# Savings Pal
 
-**What's new in 1.7.1:** a long goal name no longer runs under the gold numbers on the overlay. Type `/reload` after updating.
+**[Get it on CurseForge](https://www.curseforge.com/wow/addons/drags-hedge-fund)** · [Download the zip](https://github.com/Yungslaya/DragsHedgeFund/releases/latest/download/DragsHedgeFund.zip) · [All changes](CHANGELOG.md)
 
-**What's new in 1.7.0:** a new look for the window, overlay and mailbox panel, and a What's new window after updates. Fully restart WoW after updating (new files were added).
+**Stop spending the gold you meant to save**
 
-**What's new in 1.5.2:** each goal shows its percent and how much is set aside for it, and a new look that matches ProfessionPal. Fully restart WoW after updating (a new file was added).
+Savings Pal sets aside a cut of every gold gain for the things you are saving for, and reminds you to put it away.
 
-**What's new in 1.5.1:** Update messages only come from real CurseForge releases. Type `/reload` after updating.
+[![Watch the video: four addons with one new look](https://img.youtube.com/vi/2W8BDpfz9jg/maxresdefault.jpg)](https://youtu.be/2W8BDpfz9jg)
 
-**What's new in 1.5.0:** Drags Hedge Fund is now called **Savings Pal**. Same addon, same goals and saved gold. New command `/savings`, and a message when a newer version is out. Fully restart WoW after updating (a new file was added).
+**[Watch the video on YouTube](https://youtu.be/2W8BDpfz9jg)**
 
-**What's new in 1.4.4:** the mailbox panel now works when another addon such as TradeSkillMaster replaces the mail window. It stands on its own, has its own Send mail button, and closes when you leave the mailbox.
+## At a glance
 
-**What's new in 1.4.0:** gold totals across characters, shared goals, and an optional one-time contribution from existing gold.
+- Set a goal, like your first mount
+- Pick what percent of each gain to save
+- See what you can spend and what you owe your goals
+- At the mailbox, it fills in the mail to your bank alt. You press Send
+- Several goals at once, shared across your characters
+- A gold coach tip for right now: sell grays, fill a bag slot, train only what you use
+- It never moves gold by itself
+- Type **/savings** to start
 
-## Starter setup (starter setup)
+![Savings Pal: what you can spend and what to put away](https://raw.githubusercontent.com/Yungslaya/DragsHedgeFund/main/.previews/01-sp-window.jpg)
+
+## How it works
+
+1. Type **/savings** and add a goal and how much it costs. Ready-made mount goals are there: 100 gold for level 40 riding and 1,000 gold for level 60 riding. Your first mount at each step is free.
+2. Pick what percentage of your earnings goes to it.
+3. As you loot and sell, the addon adds up what you should put away.
+4. Mail it to a bank alt or put it in the bank, then click **I put it away**.
+
+## A small overlay keeps count
+
+It shows what is set aside, how far each goal is, and a tip for right now. Click **Saved** when you have put the gold away.
+
+![The Savings Pal overlay](https://raw.githubusercontent.com/Yungslaya/DragsHedgeFund/main/.previews/02-sp-overlay.jpg)
+
+## New: one look, and a What's new window
+
+Every window now has the same stone frame, gold corners and clean text as our other addons. After an update, one window shows what changed, with a tab for each of our addons you have. Type **/savings news** to see it again.
+
+![The What's new window](https://raw.githubusercontent.com/Yungslaya/DragsHedgeFund/main/.previews/03-whats-new.jpg)
+
+## Languages
+
+English, German, French, Spanish, Russian and Simplified Chinese. The addon switches by itself to match your game.
+
+Only English has been tested in the game. The other languages are new and may have mistakes or parts still in English. If something looks wrong in your language, please post it in the comments.
+
+## Commands
+
+- **/savings** (or the old /gg) opens the window.
+- **/savings news** shows what changed.
+- **/gg coach** turns the coach tips on or off.
+- **/gg starter** shows the simple starting setup, and **/gg restore** puts your old settings back.
+
+Savings Pal used to be called Drags Hedge Fund. Same addon, same settings.
+
+## More from Dragbag's Emporium
+
+Four free addons with one shared look. Use one, or all four.
+
+- **[Battle Buddy](https://www.curseforge.com/wow/addons/dbagsalerts)**: your next spell, timers and reminders, for all nine classes.
+- **[ProfessionPal](https://www.curseforge.com/wow/addons/professionpal)**: one clear next step for every profession, and where to farm it.
+- **[Market Ledger](https://www.curseforge.com/wow/addons/market-ledger)**: what to sell, vendor and keep, right at the Auction House.
+
+## What's new
+
+- **1.7.1:** a long goal name no longer runs under the gold numbers on the overlay. Type `/reload` after updating.
+- **1.7.0:** a new look for the window, overlay and mailbox panel, and a What's new window after updates. Fully restart WoW after updating (new files were added).
+- **1.5.2:** each goal shows its percent and how much is set aside for it, and a new look that matches ProfessionPal. Fully restart WoW after updating (a new file was added).
+- **1.5.1:** Update messages only come from real CurseForge releases. Type `/reload` after updating.
+- **1.5.0:** Drags Hedge Fund is now called **Savings Pal**. Same addon, same goals and saved gold. New command `/savings`, and a message when a newer version is out. Fully restart WoW after updating (a new file was added).
+
+[All changes](CHANGELOG.md)
+
+## Install
+
+1. Easiest: install **Savings Pal** from [CurseForge](https://www.curseforge.com/wow/addons/drags-hedge-fund) with the CurseForge app.
+2. WowUp: Get Addons, Install from URL, and paste `https://github.com/Yungslaya/DragsHedgeFund`.
+3. By hand: [download the zip](https://github.com/Yungslaya/DragsHedgeFund/releases/latest/download/DragsHedgeFund.zip), unzip it, and put the `DragsHedgeFund` folder in `World of Warcraft\_forever_\Interface\AddOns`.
+
+Fully restart WoW after installing.
+
+## More details
+
+<details>
+<summary>Open the full guide</summary>
+
+### Starter setup (starter setup)
 
 Start with `/gg` and add your own goal and savings percentage. No goals or saved gold are invented. The locked overlay appears after you add a goal and hides in combat. Overlay tips and sounds start off. Shared goals and other-character tools are available when you choose them.
 
 Open Options to enable extras. `/gg starter` applies starter display options; `/gg restore` restores your previous choices. These presets never change goals, percentages, stored savings, pending amounts, transaction history or personal/shared scope. Existing users keep their choices.
 
-## Start here
+### Start here
 
 1. Fully restart WoW after installing this update. The new account-wide saved data needs a restart.
 2. Log into each character once with the addon enabled.
@@ -30,7 +104,7 @@ Open Options to enable extras. `/gg starter` applies starter display options; `/
 4. Each character you are playing updates live. Alts show their last recorded balance and the date.
 5. Only bag gold is counted. Bank balances, unclaimed mail, auctions and other currencies are not added.
 
-## Personal and shared goals
+### Personal and shared goals
 
 - **This character** saves to that character's personal goals.
 - **Shared goals** saves to the common goals for this realm.
@@ -41,7 +115,7 @@ Open Options to enable extras. `/gg starter` applies starter display options; `/
 - Shared progress is visible on every character using Shared goals. Personal goals are preserved in the other mode.
 - Other realms appear in the total, but have separate shared goals because their gold may not be transferable.
 
-## Existing gold is optional
+### Existing gold is optional
 
 By default, only future gold increases get a cut. Logging into an alt does not count its existing gold as earnings.
 
@@ -57,7 +131,7 @@ Alt balances are snapshots. Refresh them by logging into each character before m
 
 Reserving money only increases **Put away**. It does not mark the money as stored or move it.
 
-## Put the money away
+### Put the money away
 
 Each character owes only its own contributions. Mail or bank that gold, then click **I put it away**.
 The mailbox helper fills the recipient, amount and goal note. You press Blizzard's Send button.
@@ -68,14 +142,14 @@ Personal contributions remain protected when you switch to Shared goals.
 
 The main window shows **All characters** as well. This is remembered bag gold, not stored progress.
 
-## Moving your own gold between alts
+### Moving your own gold between alts
 
 Receiving your own gold normally looks like a new gain to the money API.
 Immediately before collecting an own transfer, open **Characters** and click **Skip next own transfer**.
 The next money increase is ignored, even if it is loot instead. Normal tracking then resumes.
 The skip expires after 30 minutes if unused. This does not transfer money for you.
 
-## History and overlay
+### History and overlay
 
 History shows recorded money increases, cuts and deposits. Partial deposits show what is still owed.
 Unpaid entries are retained until settled. The newest 300 settled records are retained.
@@ -84,7 +158,7 @@ Blizzard may combine several balance changes into one money event.
 The overlay shows this character's spendable amount, contribution due and goal progress.
 Drag it to move; right-click opens the full window.
 
-## Commands
+### Commands
 
 - /gg, /hedge, /dhf: open or close
 - /gg characters: character gold list
@@ -100,13 +174,9 @@ Drag it to move; right-click opens the full window.
 - /gg add 10 2 or /gg set 50 1: fix a goal's stored amount
 - /gg reset: clear goals in the selected mode; Shared mode clears shared goals for this realm
 
-## Install
-
-Get it on [CurseForge](https://www.curseforge.com/wow/addons/drags-hedge-fund), or copy DragsHedgeFund into _forever_/Interface/AddOns/.
-This update needs a full WoW restart for the new account-wide saved-variable registration.
-
-
-## Notes
+### Notes
 
 Display only. It never buys, sells, trades or sends mail for you.
 The preset riding and mount amounts are estimates from earlier Wowhead Forever research.
+
+</details>
