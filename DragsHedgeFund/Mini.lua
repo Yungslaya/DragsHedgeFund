@@ -70,7 +70,6 @@ function GG.BuildMini()
     for i = 1, GG.MAX_GOALS do
         local r = {}
         r.name = text(M, 15, GG.C.gold)
-        r.name:SetWidth(130)
         r.name:SetWordWrap(false)
         r.val = text(M, 14, GG.C.white, "RIGHT")
         r.bar = GG.GoalBar(M, W - 2 * L, 8, 12)
@@ -146,6 +145,7 @@ function GG.RefreshMini()
         if g then
             local st = GG.GoalStatus(g)
             r.name:ClearAllPoints();  r.name:SetPoint("TOPLEFT", L, y)
+            r.name:SetPoint("RIGHT", r.val, "LEFT", -10, 0)   -- the name stops where the gold starts
             r.val:ClearAllPoints();   r.val:SetPoint("TOPRIGHT", R, y)
             r.bar:ClearAllPoints();   r.bar:SetPoint("TOPLEFT", L, y - 20)
             r.share:ClearAllPoints(); r.share:SetPoint("TOPLEFT", L, y - 32)
@@ -154,14 +154,15 @@ function GG.RefreshMini()
             if st.done then
                 r.val:SetText("|cff73de99Goal met|r")
             else
-                r.val:SetText(GG.MoneyShort(g.saved) .. " |cff8a8478/|r " .. GG.MoneyShort(g.amount) ..
-                    "  |cff8a8478" .. GG.PctText(st.frac) .. "|r")
+                r.val:SetText(GG.MoneyShort(g.saved) .. " |cff8a8478/|r " .. GG.MoneyShort(g.amount))
             end
             r.bar.top:SetValue(st.frac)
             r.bar:SetValue(st.frac2)
             r.share:SetText(g.pct .. "% of each gain")
             local here = GG.MyGoalOwed(g)
-            r.aside:SetText(here > 0 and ("Set aside  " .. GG.MoneyShort(here)) or "")
+            -- right side: gold waiting to be put away, or else how far along the goal is
+            r.aside:SetText(here > 0 and ("Set aside  " .. GG.MoneyShort(here))
+                or (st.done and "" or ("|cff8a8478" .. GG.PctText(st.frac) .. " saved|r")))
             y = y - ROW
         end
     end

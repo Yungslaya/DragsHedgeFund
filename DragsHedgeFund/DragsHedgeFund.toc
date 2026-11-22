@@ -3,7 +3,7 @@
 ## Title: |cffffd700Savings|r Pal
 ## Notes: Savings Pal: saves part of every gold gain for your goals. Was Drags Hedge Fund. Type /gg
 ## Author: Yungslaya
-## Version: 1.7.0
+## Version: 1.7.1
 ## SavedVariablesPerCharacter: DragsHedgeFundDB
 ## SavedVariables: DragsHedgeFundAccountDB
 ## IconTexture: Interface\Icons\INV_Misc_Coin_01

@@ -2,6 +2,13 @@
 
 Every released version, newest first.
 
+## 1.7.1 (2026-11-21)
+
+- **Overlay text fixed.** A long goal name no longer runs under the gold numbers. It now stops before them.
+- **Percent saved moved.** How far along a goal is now shows on the line under the bar.
+
+Type `/reload` after updating.
+
 ## 1.7.0 (2026-11-21)
 
 - **New look.** The window, overlay and mailbox panel have a stone frame with gold corners, new fonts and red gold-edged buttons. Our other addons now look the same.
